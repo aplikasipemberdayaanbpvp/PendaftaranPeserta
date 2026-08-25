@@ -73,11 +73,11 @@
           <label>Pilih Kelas<select id="voucherClassSelect"></select></label>
           <div class="voucher-actions">
             <form id="singleVoucherForm" class="inline-form"><input id="singleVoucherCode" maxlength="30" placeholder="Kode voucher, contoh SHI0101" required><button class="btn primary">Tambah</button></form>
-            <form id="bulkVoucherForm" class="inline-form bulk"><input id="voucherClassCode" maxlength="2" placeholder="Kode Kelas (01)" required><input id="voucherStart" type="number" min="1" max="99" value="1" placeholder="Nomor Awal"><input id="voucherCount" type="number" min="1" max="99" value="10" placeholder="Jumlah"><button class="btn secondary">🎟️ Generate Batch</button></form>
+            <form id="bulkVoucherForm" class="inline-form bulk"><input id="voucherPrefix" maxlength="15" placeholder="Prefix SHI"><input id="voucherStart" type="number" min="0" value="101" placeholder="Mulai"><input id="voucherCount" type="number" min="1" max="500" value="10" placeholder="Jumlah"><button class="btn secondary">Generate Batch</button></form>
           </div>
           <div id="voucherStatus" class="alert hidden"></div>
         </div>
-        <div class="panel table-wrap"><div class="button-row"><label><input id="voucherSelectAll" type="checkbox"> Pilih Semua</label><button id="deleteSelectedVouchers" class="btn danger" type="button">🗑️ Hapus Voucher Terpilih</button></div><div class="panel table-wrap"><table><thead><tr><th>✓</th><th>Kode</th><th>Status</th><th>NIK Peserta</th><th>Aksi</th></tr></thead><tbody id="voucherTableBody"></tbody></table></div></div>
+        <div class="panel table-wrap"><table><thead><tr><th>Kode</th><th>Status</th><th>NIK Peserta</th><th>Aksi</th></tr></thead><tbody id="voucherTableBody"></tbody></table></div>
       </section>
 
       <section id="page-export" class="page-section hidden">
