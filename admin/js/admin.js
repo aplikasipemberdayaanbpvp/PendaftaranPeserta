@@ -53,8 +53,6 @@ function bindUi() {
   $("voucherClassSelect").addEventListener("change", () => loadVouchers($("voucherClassSelect").value));
   $("singleVoucherForm").addEventListener("submit", addSingleVoucher);
   $("bulkVoucherForm").addEventListener("submit", addVoucherBatch);
-  $("voucherSelectAll").addEventListener("change", toggleVoucherSelection);
-  $("deleteSelectedVouchers").addEventListener("click", deleteSelectedVouchers);
   $("exportButton").addEventListener("click", exportSpreadsheet);
   $("exportExcelButton").addEventListener("click", exportExcel);
   $("memberDialogClose").addEventListener("click", () => $("memberDialog").close());
@@ -213,34 +211,13 @@ async function loadVouchers(classCode) {
 function renderVoucherRows(classCode, vouchers) {
   const body = $("voucherTableBody"); body.replaceChildren();
   vouchers.forEach((v) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${v.status==="available" ? `<input class="voucher-check" type="checkbox" data-id="${escAttr(v.id)}">` : "-"}</td>
-    <td>${esc(v.code || v.id)}</td><td>${statusHtml(v.status)}</td>
-    <td>${esc(v.memberNik ? maskNik(v.memberNik) : "-")}</td>
-    <td>${v.status === "available" ? '<button class="mini-btn danger">Hapus</button>' : '-'}</td>`;
-    const btn = tr.querySelector("button");
-    if (btn) btn.addEventListener("click", async () => {
-      if (await askConfirm("🗑️ Hapus Voucher", `Voucher ${v.code || v.id} akan dihapus.`, "Hapus")) {
-        await deleteDoc(doc(db,"classes",classCode,"vouchers",v.id)); await loadVouchers(classCode);
-      }
-    });
+    const tr = document.createElement("tr"); tr.innerHTML = `<td>${esc(v.code || v.id)}</td><td>${statusHtml(v.status)}</td><td>${esc(v.memberNik ? maskNik(v.memberNik) : "-")}</td><td>${v.status === "available" ? '<button class="mini-btn danger">Hapus</button>' : '-'}</td>`;
+    const btn = tr.querySelector("button"); if (btn) btn.addEventListener("click", async () => { if (confirm(`Hapus voucher ${v.code || v.id}?`)) { await deleteDoc(doc(db,"classes",classCode,"vouchers",v.id)); await loadVouchers(classCode); } });
     body.appendChild(tr);
   });
-  if (!vouchers.length) body.innerHTML = `<tr><td colspan="5">Belum ada voucher.</td></tr>`;
+  if (!vouchers.length) body.innerHTML = `<tr><td colspan="4">Belum ada voucher.</td></tr>`;
 }
-function toggleVoucherSelection(){
-  document.querySelectorAll(".voucher-check").forEach(c=>c.checked=$("voucherSelectAll").checked);
-}
-async function deleteSelectedVouchers(){
-  const classCode=$("voucherClassSelect").value;
-  const ids=[...document.querySelectorAll(".voucher-check:checked")].map(c=>c.dataset.id);
-  if(!ids.length) return show($("voucherStatus"),"Pilih voucher terlebih dahulu.","warning");
-  if(!(await askConfirm("🗑️ Hapus Voucher Terpilih",`Anda memilih ${ids.length} voucher. Voucher akan dihapus permanen.`,"Hapus"))) return;
-  const batch=writeBatch(db);
-  ids.forEach(id=>batch.delete(doc(db,"classes",classCode,"vouchers",id)));
-  await batch.commit();
-  await loadVouchers(classCode);
-}
+
 async function addSingleVoucher(event) {
   event.preventDefault(); const classCode = $("voucherClassSelect").value; const code = $("singleVoucherCode").value.trim().toUpperCase();
   if (!classCode) return show($("voucherStatus"), "Pilih kelas terlebih dahulu.", "error");
@@ -250,12 +227,12 @@ async function addSingleVoucher(event) {
 }
 
 async function addVoucherBatch(event) {
-  event.preventDefault(); const classCode = $("voucherClassSelect").value; const voucherClassCode = $("voucherClassCode").value.trim();
+  event.preventDefault(); const classCode = $("voucherClassSelect").value; const prefix = $("voucherPrefix").value.trim().toUpperCase();
   const start = Number($("voucherStart").value); const count = Number($("voucherCount").value);
   if (!classCode) return show($("voucherStatus"), "Pilih kelas terlebih dahulu.", "error");
-  if (!/^\\d{2}$/.test(voucherClassCode)) return show($("voucherStatus"), "Kode kelas harus 2 digit, contoh 01.", "error");
+  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Prefix voucher tidak valid.", "error");
   if (!Number.isInteger(start) || start < 0 || !Number.isInteger(count) || count < 1 || count > 400) return show($("voucherStatus"), "Jumlah batch 1-400 voucher.", "error");
-  const codes = Array.from({length:count}, (_,i) => voucherClassCode + String(start+i).padStart(2,"0"));
+  const codes = Array.from({length:count}, (_,i) => prefix + String(start+i).padStart(4,"0"));
   const existing = new Set((state.vouchers.get(classCode)||[]).map((v) => v.code || v.id)); const duplicates = codes.filter((c)=>existing.has(c));
   if (duplicates.length) return show($("voucherStatus"), `Batal: ${duplicates.length} kode sudah ada. Contoh ${duplicates[0]}.`, "error");
   const batch = writeBatch(db); codes.forEach((code) => batch.set(doc(db,"classes",classCode,"vouchers",code), {code,status:"available",memberNik:"",createdAt:serverTimestamp()}));
@@ -263,7 +240,7 @@ async function addVoucherBatch(event) {
 }
 
 function openMemberEdit(m) {
-  $("editNik").value = m.nik || m.id; $("editName").value = m.name || ""; $("editPhone").value = m.phone || ""; $("editEmail").value = m.email || ""; $("editBirthPlace").value = m.birthPlace || ""; $("editBirthDate").value = m.birthDate || "";
+  $("editNik").value = m.nik || m.id; $("editName").value = m.name || ""; $("editBirthPlace").value = m.birthPlace || ""; $("editBirthDate").value = m.birthDate || "";
   $("editMotherName").value = m.motherName || ""; $("editAddress").value = m.address || ""; $("editAccountNumber").value = m.accountNumber || ""; $("editBankName").value = m.bankName || ""; $("editAccountHolder").value = m.accountHolder || ""; $("editShirtSize").value = m.shirtSize || "L";
   $("memberEditStatus").classList.add("hidden"); $("memberDialog").showModal();
 }
@@ -271,7 +248,7 @@ function openMemberEdit(m) {
 async function saveMemberEdit(event) {
   event.preventDefault(); const nik = $("editNik").value;
   try {
-    await updateDoc(doc(db,"members",nik), { name:$("editName").value.trim(), phone:$("editPhone").value.trim(), email:$("editEmail").value.trim(), birthPlace:$("editBirthPlace").value.trim(), birthDate:$("editBirthDate").value, motherName:$("editMotherName").value.trim(), address:$("editAddress").value.trim(), accountNumber:$("editAccountNumber").value.trim(), bankName:$("editBankName").value.trim(), accountHolder:$("editAccountHolder").value.trim(), shirtSize:$("editShirtSize").value, updatedAt:serverTimestamp() });
+    await updateDoc(doc(db,"members",nik), { name:$("editName").value.trim(), birthPlace:$("editBirthPlace").value.trim(), birthDate:$("editBirthDate").value, motherName:$("editMotherName").value.trim(), address:$("editAddress").value.trim(), accountNumber:$("editAccountNumber").value.trim(), bankName:$("editBankName").value.trim(), accountHolder:$("editAccountHolder").value.trim(), shirtSize:$("editShirtSize").value, updatedAt:serverTimestamp() });
     $("memberDialog").close(); await loadMembers(); renderMembers(); renderDashboard();
   } catch (error) { show($("memberEditStatus"), error.message || String(error), "error"); }
 }
