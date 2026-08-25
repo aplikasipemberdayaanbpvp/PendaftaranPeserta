@@ -263,7 +263,7 @@ async function addVoucherBatch(event) {
 }
 
 function openMemberEdit(m) {
-  $("editNik").value = m.nik || m.id; $("editName").value = m.name || ""; $("editBirthPlace").value = m.birthPlace || ""; $("editBirthDate").value = m.birthDate || "";
+  $("editNik").value = m.nik || m.id; $("editName").value = m.name || ""; $("editPhone").value = m.phone || ""; $("editEmail").value = m.email || ""; $("editBirthPlace").value = m.birthPlace || ""; $("editBirthDate").value = m.birthDate || "";
   $("editMotherName").value = m.motherName || ""; $("editAddress").value = m.address || ""; $("editAccountNumber").value = m.accountNumber || ""; $("editBankName").value = m.bankName || ""; $("editAccountHolder").value = m.accountHolder || ""; $("editShirtSize").value = m.shirtSize || "L";
   $("memberEditStatus").classList.add("hidden"); $("memberDialog").showModal();
 }
@@ -271,7 +271,7 @@ function openMemberEdit(m) {
 async function saveMemberEdit(event) {
   event.preventDefault(); const nik = $("editNik").value;
   try {
-    await updateDoc(doc(db,"members",nik), { name:$("editName").value.trim(), birthPlace:$("editBirthPlace").value.trim(), birthDate:$("editBirthDate").value, motherName:$("editMotherName").value.trim(), address:$("editAddress").value.trim(), accountNumber:$("editAccountNumber").value.trim(), bankName:$("editBankName").value.trim(), accountHolder:$("editAccountHolder").value.trim(), shirtSize:$("editShirtSize").value, updatedAt:serverTimestamp() });
+    await updateDoc(doc(db,"members",nik), { name:$("editName").value.trim(), phone:$("editPhone").value.trim(), email:$("editEmail").value.trim(), birthPlace:$("editBirthPlace").value.trim(), birthDate:$("editBirthDate").value, motherName:$("editMotherName").value.trim(), address:$("editAddress").value.trim(), accountNumber:$("editAccountNumber").value.trim(), bankName:$("editBankName").value.trim(), accountHolder:$("editAccountHolder").value.trim(), shirtSize:$("editShirtSize").value, updatedAt:serverTimestamp() });
     $("memberDialog").close(); await loadMembers(); renderMembers(); renderDashboard();
   } catch (error) { show($("memberEditStatus"), error.message || String(error), "error"); }
 }

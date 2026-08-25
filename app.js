@@ -93,7 +93,7 @@
     if (!bankPending && bankName === "Lainnya") bankName = $("otherBankName").value.trim();
     return {
       classCode: activeClass?.code || "",
-      nik: $("nik").value.trim(), name: $("name").value.trim(), birthPlace: $("birthPlace").value.trim(), birthDate: $("birthDate").value,
+      nik: $("nik").value.trim(), name: $("name").value.trim(), birthPlace: $("birthPlace").value.trim(), birthDate: $("birthDate").value, phone: $("phone").value.trim(), email: $("email").value.trim(),
       address: buildAddress(), motherName: $("motherName").value.trim(), bankPending,
       accountNumber: bankPending ? "" : $("accountNumber").value.trim(), bankName: bankPending ? "Menyusul" : bankName,
       accountHolder: bankPending ? "" : $("accountHolder").value.trim(), shirtSize: $("shirtSize").value
