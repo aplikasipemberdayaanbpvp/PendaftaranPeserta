@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Keanggotaan</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <section id="loginView" class="login-shell">
+    <form id="loginForm" class="login-card">
+      <p class="eyebrow">ADMIN PANEL</p>
+      <h1>Masuk Admin</h1>
+      <p class="muted">Gunakan akun Firebase Authentication yang sudah diberi role admin.</p>
+      <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <div id="loginStatus" class="alert hidden"></div>
+      <button class="btn primary" type="submit">Masuk</button>
+    </form>
+  </section>
+
+  <div id="adminView" class="admin-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><small>ADMIN</small><strong>Keanggotaan</strong></div>
+      <nav>
+        <button data-page="dashboard" class="nav-btn active">Dashboard</button>
+        <button data-page="members" class="nav-btn">Anggota</button>
+        <button data-page="classes" class="nav-btn">Kelas</button>
+        <button data-page="vouchers" class="nav-btn">Voucher</button>
+        <button data-page="export" class="nav-btn">Export</button>
+      </nav>
+      <button id="logoutButton" class="nav-btn danger">Keluar</button>
+    </aside>
+
+    <main class="content">
+      <header class="topbar"><div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Ringkasan data keanggotaan.</p></div><div id="adminIdentity" class="identity"></div></header>
+
+      <section id="page-dashboard" class="page-section">
+        <div class="stats">
+          <article><span>Total Anggota</span><strong id="statMembers">0</strong></article>
+          <article><span>Total Kelas</span><strong id="statClasses">0</strong></article>
+          <article><span>Voucher Tersedia</span><strong id="statAvailableVouchers">0</strong></article>
+          <article><span>Voucher Terpakai</span><strong id="statAssignedVouchers">0</strong></article>
+        </div>
+        <div class="panel"><div class="panel-head"><h2>Kelas terbaru</h2></div><div id="dashboardClasses"></div></div>
+      </section>
+
+      <section id="page-members" class="page-section hidden">
+        <div class="toolbar">
+          <input id="memberSearch" placeholder="Cari NIK / nama...">
+          <select id="memberClassFilter"><option value="">Semua kelas</option></select>
+        </div>
+        <div class="panel table-wrap"><table><thead><tr><th>No.</th><th>NIK</th><th>Nama</th><th>Kelas</th><th>Voucher</th><th>Ukuran</th><th>Aksi</th></tr></thead><tbody id="memberTableBody"></tbody></table></div>
+      </section>
+
+      <section id="page-classes" class="page-section hidden">
+        <div class="split">
+          <form id="classForm" class="panel form-panel">
+            <div class="panel-head"><h2>Tambah / Edit Kelas</h2></div>
+            <input id="classOriginalCode" type="hidden">
+            <label>Kode Kelas<input id="classCode" maxlength="20" placeholder="5AAE89A5" required></label>
+            <label>Nama Kelas<input id="className" maxlength="100" placeholder="Kelas Lembang Batch 1" required></label>
+            <label>Status<select id="classStatusInput"><option value="active">Aktif</option><option value="closed">Ditutup</option></select></label>
+            <div class="button-row"><button id="classReset" class="btn secondary" type="button">Reset</button><button class="btn primary" type="submit">Simpan Kelas</button></div>
+            <div id="classFormStatus" class="alert hidden"></div>
+          </form>
+          <div class="panel table-wrap"><table><thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th>Link</th><th>Aksi</th></tr></thead><tbody id="classTableBody"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="page-vouchers" class="page-section hidden">
+        <div class="voucher-controls panel">
+          <label>Pilih Kelas<select id="voucherClassSelect"></select></label>
+          <div class="voucher-actions">
+            <form id="singleVoucherForm" class="inline-form"><input id="singleVoucherCode" maxlength="30" placeholder="Kode voucher, contoh SHI0101" required><button class="btn primary">Tambah</button></form>
+            <form id="bulkVoucherForm" class="inline-form bulk"><input id="voucherPrefix" maxlength="15" placeholder="Prefix SHI"><input id="voucherStart" type="number" min="0" value="101" placeholder="Mulai"><input id="voucherCount" type="number" min="1" max="500" value="10" placeholder="Jumlah"><button class="btn secondary">Generate Batch</button></form>
+          </div>
+          <div id="voucherStatus" class="alert hidden"></div>
+        </div>
+        <div class="panel table-wrap"><table><thead><tr><th>Kode</th><th>Status</th><th>NIK Anggota</th><th>Aksi</th></tr></thead><tbody id="voucherTableBody"></tbody></table></div>
+      </section>
+
+      <section id="page-export" class="page-section hidden">
+        <div class="panel export-panel">
+          <h2>Export ke Google Spreadsheet</h2>
+          <p class="muted">Data utama tetap di Firestore. Tombol ini hanya membuat/menyegarkan sheet export.</p>
+          <label>Kelas<select id="exportClassSelect"><option value="">Semua kelas</option></select></label>
+          <button id="exportButton" class="btn primary">Export Spreadsheet</button>
+          <div id="exportStatus" class="alert hidden"></div>
+          <a id="exportLink" class="result-link hidden" target="_blank" rel="noopener">Buka Spreadsheet</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="memberDialog">
+    <form id="memberEditForm" method="dialog" class="dialog-card">
+      <div class="dialog-head"><h2>Edit Anggota</h2><button id="memberDialogClose" type="button">×</button></div>
+      <input id="editNik" type="hidden">
+      <div class="grid-2"><label>Nama<input id="editName" required></label><label>Tempat Lahir<input id="editBirthPlace" required></label></div>
+      <div class="grid-2"><label>Tanggal Lahir<input id="editBirthDate" type="date" required></label><label>Nama Ibu<input id="editMotherName" required></label></div>
+      <label>Alamat<textarea id="editAddress" rows="3" required></textarea></label>
+      <div class="grid-2"><label>Nomor Rekening<input id="editAccountNumber"></label><label>Nama Bank<input id="editBankName"></label></div>
+      <div class="grid-2"><label>Atas Nama<input id="editAccountHolder"></label><label>Ukuran Baju<select id="editShirtSize"><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></label></div>
+      <p class="muted">NIK, kelas, dan voucher tidak diubah dari dialog ini agar relasinya tetap konsisten.</p>
+      <div id="memberEditStatus" class="alert hidden"></div>
+      <div class="button-row"><button id="memberCancel" type="button" class="btn secondary">Batal</button><button class="btn primary" value="default">Simpan</button></div>
+    </form>
+  </dialog>
+
+  <iframe id="apiBridgeFrame" name="apiBridgeFrame" title="API bridge" class="bridge-frame"></iframe>
+  <script src="../config.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

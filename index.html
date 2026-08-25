@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Form Pendaftaran Pelatihan">
+  <title>Pendaftaran Pelatihan</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">FORM PENDAFTARAN</p>
+        <h1>Pendaftaran Pelatihan</h1>
+        <p class="hero-copy">Isi data dengan teliti. Sistem akan membantu memeriksa typo pada tempat lahir dan alamat sebelum data disimpan.</p>
+      </div>
+      <div class="class-card">
+        <span>Kelas</span>
+        <strong id="classNameText">Memuat...</strong>
+        <small id="classCodeText">-</small>
+      </div>
+    </header>
+
+    <section id="setupWarning" class="alert alert-warning hidden" role="alert"></section>
+    <section id="classStatus" class="alert alert-info" role="status">Memeriksa kelas...</section>
+
+    <section id="formSection" class="card hidden">
+      <form id="registrationForm" novalidate>
+        <div class="section-heading">
+          <span class="step-number">1</span>
+          <div>
+            <h2>Data pribadi</h2>
+            <p>Gunakan data yang benar sesuai kebutuhan administrasi.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="nik">NIK <span>*</span></label>
+          <input id="nik" name="nik" type="text" inputmode="numeric" autocomplete="off" maxlength="16" placeholder="16 digit NIK" required>
+          <small>NIK digunakan sebagai identitas unik. Satu NIK hanya dapat terdaftar satu kali.</small>
+        </div>
+
+        <div class="field">
+          <label for="name">Nama Lengkap <span>*</span></label>
+          <input id="name" name="name" type="text" maxlength="100" autocomplete="name" placeholder="Contoh: Azis Firdaus" required>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="birthPlace">Tempat Lahir <span>*</span></label>
+            <input id="birthPlace" name="birthPlace" type="text" maxlength="80" placeholder="Contoh: Subang" required>
+          </div>
+          <div class="field">
+            <label for="birthDate">Tanggal Lahir <span>*</span></label>
+            <input id="birthDate" name="birthDate" type="date" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="address">Alamat Lengkap <span>*</span></label>
+          <div class="field">
+  <label for="street">Kampung / Jalan <span>*</span></label>
+  <input 
+    id="street"
+    name="street"
+    type="text"
+    placeholder="Contoh: Kp. Sukamanah / Jl. Merdeka No. 10"
+    required>
+</div>
+
+
+<div class="grid-2">
+
+  <div class="field">
+    <label for="rt">RT <span>*</span></label>
+    <input 
+      id="rt"
+      name="rt"
+      type="text"
+      placeholder="01">
+  </div>
+
+
+  <div class="field">
+    <label for="rw">RW <span>*</span></label>
+    <input 
+      id="rw"
+      name="rw"
+      type="text"
+      placeholder="02">
+  </div>
+
+</div>
+
+
+<div class="field">
+  <label for="village">Desa / Kelurahan <span>*</span></label>
+  <input 
+    id="village"
+    name="village"
+    placeholder="Cibodas">
+</div>
+
+
+<div class="field">
+  <label for="district">Kecamatan <span>*</span></label>
+  <input 
+    id="district"
+    name="district"
+    placeholder="Lembang">
+</div>
+
+
+<div class="field">
+  <label for="regency">Kabupaten / Kota <span>*</span></label>
+  <input 
+    id="regency"
+    name="regency"
+    placeholder="Bandung Barat">
+</div>
+
+
+<div class="field">
+  <label for="province">Provinsi <span>*</span></label>
+  <input 
+    id="province"
+    name="province"
+    placeholder="Jawa Barat">
+</div>
+          <small>Pastikan nomor rumah, RT/RW, desa, kecamatan, dan kabupaten sudah benar.</small>
+        </div>
+
+        <div class="field">
+          <label for="motherName">Nama Ibu <span>*</span></label>
+          <input id="motherName" name="motherName" type="text" maxlength="100" placeholder="Contoh: Resnayanti" required>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-heading">
+          <span class="step-number">2</span>
+          <div>
+            <h2>Rekening dan ukuran baju</h2>
+            <p>Data rekening tidak dikirim ke layanan AI.</p>
+          </div>
+        </div>
+
+        <label class="check-panel" for="bankPending">
+          <input id="bankPending" name="bankPending" type="checkbox">
+          <span><strong>Rekening menyusul</strong><small>Centang jika nomor rekening belum tersedia.</small></span>
+        </label>
+
+        <div id="bankFields">
+          <div class="grid-2">
+            <div class="field">
+              <label for="accountNumber">Nomor Rekening <span>*</span></label>
+              <input id="accountNumber" name="accountNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="30" placeholder="Hanya angka">
+            </div>
+            <div class="field">
+              <label for="bankName">Nama Bank <span>*</span></label>
+              <select id="bankName" name="bankName">
+                <option value="">Pilih bank</option>
+                <option value="BCA">BCA</option><option value="BNI">BNI</option><option value="BRI">BRI</option>
+                <option value="Mandiri">Mandiri</option><option value="BSI">BSI</option><option value="BTN">BTN</option>
+                <option value="SeaBank">SeaBank</option><option value="Bank Jago">Bank Jago</option>
+                <option value="CIMB Niaga">CIMB Niaga</option><option value="PermataBank">PermataBank</option>
+                <option value="Danamon">Danamon</option><option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="otherBankField" class="field hidden">
+            <label for="otherBankName">Nama Bank Lainnya <span>*</span></label>
+            <input id="otherBankName" type="text" maxlength="80" placeholder="Tuliskan nama bank">
+          </div>
+
+          <div class="field">
+            <label for="accountHolder">Atas Nama Bank <span>*</span></label>
+            <input id="accountHolder" name="accountHolder" type="text" maxlength="100" placeholder="Nama pemilik rekening">
+          </div>
+        </div>
+
+        <div class="field shirt-field">
+          <label for="shirtSize">Ukuran Baju <span>*</span></label>
+          <select id="shirtSize" name="shirtSize" required>
+            <option value="">Pilih ukuran</option><option value="S">S</option><option value="M">M</option>
+            <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option>
+          </select>
+        </div>
+
+        <div class="privacy-note"><strong>Privasi AI:</strong> Groq hanya menerima teks <b>Tempat Lahir</b> dan <b>Alamat Lengkap</b> untuk membantu koreksi typo. NIK, nama, tanggal lahir, nama ibu, dan seluruh data rekening tidak dikirim ke Groq.</div>
+
+        <label class="check-panel consent" for="consent">
+          <input id="consent" type="checkbox" required>
+          <span>Saya sudah memeriksa data yang saya isi dan menyetujui data ini disimpan untuk keperluan administrasi keanggotaan.</span>
+        </label>
+
+        <div id="formStatus" class="alert hidden" role="status" aria-live="polite"></div>
+        <button id="previewButton" class="button button-primary button-full" type="submit">Periksa Data</button>
+      </form>
+    </section>
+
+    <section id="previewSection" class="card hidden">
+      <div class="section-heading">
+        <span class="step-number">3</span>
+        <div><h2>Preview sebelum dikirim</h2><p>Periksa hasil koreksi. Anda tetap dapat mengubah tempat lahir dan alamat.</p></div>
+      </div>
+
+      <div class="preview-grid">
+        <article class="preview-item"><span class="preview-label">NIK</span><strong id="previewNik"></strong></article>
+        <article class="preview-item"><span class="preview-label">Nama Lengkap</span><strong id="previewName"></strong></article>
+        <article class="preview-item"><span class="preview-label">Tempat Lahir Asli</span><p id="originalBirthPlace"></p></article>
+        <article class="preview-item"><label class="preview-label" for="finalBirthPlace">Tempat Lahir Hasil Pemeriksaan</label><input id="finalBirthPlace" type="text" maxlength="80"><p id="birthPlaceMeta" class="meta"></p><div id="birthPlaceAlternatives" class="chips"></div></article>
+        <article class="preview-item full"><span class="preview-label">Tanggal Lahir</span><strong id="previewBirthDate"></strong></article>
+        <article class="preview-item full"><span class="preview-label">Alamat Asli</span><p id="originalAddress" class="address-copy"></p></article>
+        <article class="preview-item full"><label class="preview-label" for="finalAddress">Alamat Hasil Pemeriksaan</label><textarea id="finalAddress" rows="4" maxlength="500"></textarea><p id="addressMeta" class="meta"></p></article>
+        <article class="preview-item"><span class="preview-label">Nama Ibu</span><strong id="previewMotherName"></strong></article>
+        <article class="preview-item"><span class="preview-label">Ukuran Baju</span><strong id="previewShirtSize"></strong></article>
+        <article class="preview-item full"><span class="preview-label">Data Rekening</span><p id="previewBank"></p></article>
+      </div>
+
+      <div class="preview-warning">Jika nomor rumah, RT/RW, blok, atau angka lain salah sejak input awal, pilih <b>Kembali Edit</b>. Sistem tidak mengizinkan angka alamat berubah hanya pada tahap preview.</div>
+      <div id="previewStatus" class="alert hidden" role="status" aria-live="polite"></div>
+      <div class="button-row"><button id="backButton" class="button button-secondary" type="button">Kembali Edit</button><button id="submitButton" class="button button-primary" type="button">Kirim Pendaftaran</button></div>
+    </section>
+
+    <section id="successSection" class="card success-card hidden" aria-live="polite">
+      <div class="success-icon">✓</div><p class="eyebrow">PENDAFTARAN BERHASIL</p><h2>Data sudah tercatat</h2>
+      <p id="successSummary"></p>
+      <div class="success-data"><div><span>No. Pendaftaran</span><strong id="successNumber"></strong></div><div><span>Kode Kelas</span><strong id="successClassCode"></strong></div></div>
+      <div class="voucher-box"><span>Kode Voucher</span><strong id="successVoucher"></strong></div>
+      <p class="success-note">Simpan kode voucher ini jika diperlukan oleh admin.</p>
+    </section>
+  </main>
+
+  <iframe
+  id="apiBridgeFrame"
+  name="apiBridgeFrame"
+  title="API bridge"
+  style="display:none;width:0;height:0;border:0;">
+</iframe>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
