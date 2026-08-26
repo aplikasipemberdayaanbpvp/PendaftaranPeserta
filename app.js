@@ -175,6 +175,8 @@ return "Alamat belum lengkap.";
   function renderPreview(state) {
     const { raw, suggestion } = state;
     $("previewNik").textContent = raw.nik; $("previewName").textContent = raw.name;
+    $("previewPhone").textContent = raw.phone || "-";
+    $("previewEmail").textContent = raw.email || "-";
     $("originalBirthPlace").textContent = raw.birthPlace; $("finalBirthPlace").value = suggestion.birthPlace || raw.birthPlace;
     const birthConfidence = Math.round(Number(suggestion.birthPlaceConfidence || 0) * 100);
     $("birthPlaceMeta").textContent = `${suggestion.birthPlaceSource || "Input asli"} · confidence ${birthConfidence}%${suggestion.birthPlaceNote ? ` · ${suggestion.birthPlaceNote}` : ""}`;

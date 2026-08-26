@@ -291,26 +291,11 @@ async function deleteMember(m) {
 async function exportExcel() {
   try {
     const selected = $("exportClassSelect").value;
-    let rows = state.members.map((m,i)=>{ const cls=state.classes.find(c=>c.code===m.classId)||{}; return {
-      No:i+1,
-      "Nomor Identitas":m.nik||m.id||"",
-      "Nama Lengkap":m.name||"",
-      "Tgl. Lahir":m.birthDate||"",
-      "Handphone":m.phone||"",
-      "Email":m.email||"",
-      "Alamat":m.address||"",
-      "Nama Ibu Kandung":m.motherName||"",
-      "Nama Pelatihan":cls.name||m.classId||"",
-      "Tgl Mulai-Selesai":(cls.startDate||"")+" - "+(cls.endDate||""),
-      "Nama Industri / Perusahaan":m.company||"",
-      "Nomor Rekening":m.accountNumber||"",
-      "Nama Bank":m.bankName||"",
-      "Atas Nama Bank":m.accountHolder||""
-    };});
+    let rows = state.members.map((m,i)=>({No:i+1, "Nomor Identitas":m.nik||m.id||"", "Nama Lengkap":m.name||"", "Tanggal Lahir":m.birthDate||"", "Handphone":m.phone||m.handphone||"", "Email":m.email||"", "Alamat":m.address||"", "Nama Ibu Kandung":m.motherName||"", "Nama Pelatihan":(state.classes.find(c=>c.code===m.classId)||{}).name||m.classId||"", "Voucher":m.voucherCode||"", "Ukuran Baju":m.shirtSize||""}));
     if(selected) rows = rows.filter(r=>r.KodeKelas===selected);
     if(!rows.length) return show($("exportStatus"),"Tidak ada data peserta untuk diexport.","error");
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"]=[{wch:6},{wch:20},{wch:25},{wch:15},{wch:18},{wch:28},{wch:35},{wch:25},{wch:30},{wch:25},{wch:30},{wch:18},{wch:15},{wch:20}];
+    ws["!cols"]=[{wch:6},{wch:20},{wch:25},{wch:15},{wch:16},{wch:30},{wch:35},{wch:25},{wch:30},{wch:18},{wch:15}];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Peserta");
     XLSX.writeFile(wb, selected ? `Peserta_${selected}.xlsx` : "Semua_Peserta.xlsx");
     show($("exportStatus"),"Export Excel berhasil dibuat.","success");
