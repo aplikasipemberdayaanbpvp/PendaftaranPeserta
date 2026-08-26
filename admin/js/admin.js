@@ -53,6 +53,8 @@ function bindUi() {
   $("voucherClassSelect").addEventListener("change", () => loadVouchers($("voucherClassSelect").value));
   $("singleVoucherForm").addEventListener("submit", addSingleVoucher);
   $("bulkVoucherForm").addEventListener("submit", addVoucherBatch);
+  $("deleteSelectedVouchers").addEventListener("click", deleteSelectedVouchers);
+  $("voucherSelectAll").addEventListener("change", toggleAllVoucherCheckbox);
   $("exportButton").addEventListener("click", exportSpreadsheet);
   $("exportExcelButton").addEventListener("click", exportExcel);
   $("memberDialogClose").addEventListener("click", () => $("memberDialog").close());
@@ -211,11 +213,29 @@ async function loadVouchers(classCode) {
 function renderVoucherRows(classCode, vouchers) {
   const body = $("voucherTableBody"); body.replaceChildren();
   vouchers.forEach((v) => {
-    const tr = document.createElement("tr"); tr.innerHTML = `<td>${esc(v.code || v.id)}</td><td>${statusHtml(v.status)}</td><td>${esc(v.memberNik ? maskNik(v.memberNik) : "-")}</td><td>${v.status === "available" ? '<button class="mini-btn danger">Hapus</button>' : '-'}</td>`;
-    const btn = tr.querySelector("button"); if (btn) btn.addEventListener("click", async () => { if (confirm(`Hapus voucher ${v.code || v.id}?`)) { await deleteDoc(doc(db,"classes",classCode,"vouchers",v.id)); await loadVouchers(classCode); } });
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><input type="checkbox" class="voucher-check" data-id="${escAttr(v.id)}"></td><td>${esc(v.code || v.id)}</td><td>${statusHtml(v.status)}</td><td>${esc(v.memberNik ? maskNik(v.memberNik) : "-")}</td>`;
     body.appendChild(tr);
   });
   if (!vouchers.length) body.innerHTML = `<tr><td colspan="4">Belum ada voucher.</td></tr>`;
+}
+
+function toggleAllVoucherCheckbox() {
+  document.querySelectorAll(".voucher-check").forEach((cb) => cb.checked = $("voucherSelectAll").checked);
+}
+
+async function deleteSelectedVouchers() {
+  const classCode = $("voucherClassSelect").value;
+  const selected = [...document.querySelectorAll(".voucher-check:checked")].map((cb) => cb.dataset.id);
+  if (!classCode || !selected.length) return alert("Pilih voucher yang ingin dihapus.");
+
+  if (!confirm(`Hapus ${selected.length} voucher terpilih?`)) return;
+
+  const batch = writeBatch(db);
+  selected.forEach((id) => batch.delete(doc(db, "classes", classCode, "vouchers", id)));
+  await batch.commit();
+  $("voucherSelectAll").checked = false;
+  await loadVouchers(classCode);
 }
 
 async function addSingleVoucher(event) {

@@ -77,7 +77,12 @@
           </div>
           <div id="voucherStatus" class="alert hidden"></div>
         </div>
-        <div class="panel table-wrap"><table><thead><tr><th>Kode</th><th>Status</th><th>NIK Peserta</th><th>Aksi</th></tr></thead><tbody id="voucherTableBody"></tbody></table></div>
+        <div class="panel table-wrap">
+          <div class="voucher-actions" style="margin-bottom:12px;">
+            <button id="deleteSelectedVouchers" class="btn danger">Hapus Voucher Terpilih</button>
+          </div>
+          <table><thead><tr><th><input id="voucherSelectAll" type="checkbox"></th><th>Kode</th><th>Status</th><th>NIK Peserta</th></tr></thead><tbody id="voucherTableBody"></tbody></table>
+        </div>
       </section>
 
       <section id="page-export" class="page-section hidden">
