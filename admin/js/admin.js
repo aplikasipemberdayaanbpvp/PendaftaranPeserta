@@ -252,29 +252,49 @@ async function addVoucherBatch(event) {
 
   const classCode = $("voucherClassSelect").value;
   const prefix = $("voucherPrefix").value.trim().toUpperCase();
+  const classNumberInput = $("voucherClassNumber").value.trim();
+  const startNumber = Number($("voucherStartNumber").value);
   const count = Number($("voucherCount").value);
 
   if (!classCode) return show($("voucherStatus"), "Pilih kelas terlebih dahulu.", "error");
-  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Kode kelas tidak valid.", "error");
+  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Prefix tidak valid.", "error");
+  if (!/^\\d{1,2}$/.test(classNumberInput)) return show($("voucherStatus"), "Kode kelas harus angka.", "error");
+  if (!Number.isInteger(startNumber) || startNumber < 1) return show($("voucherStatus"), "Nomor awal urut tidak valid.", "error");
   if (!Number.isInteger(count) || count < 1 || count > 400) return show($("voucherStatus"), "Jumlah voucher 1-400.", "error");
 
-  // Nomor kelas mengikuti urutan kelas aktif (01, 02, 03...)
-  const sortedClasses = [...state.classes].sort((a,b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
-  let classIndex = sortedClasses.findIndex(c => c.code === classCode) + 1;
-  if (classIndex < 1) classIndex = 1;
-
-  const classNumber = String(classIndex).padStart(2, "0");
-
+  const classNumber = classNumberInput.padStart(2, "0");
   const existing = new Set((state.vouchers.get(classCode) || []).map(v => v.code || v.id));
-
-  let next = 1;
   const codes = [];
 
+  let next = startNumber;
   while (codes.length < count) {
     const sequence = String(next).padStart(2, "0");
     const code = `${prefix}${classNumber}${sequence}`;
-
     if (!existing.has(code)) {
+      codes.push(code);
+      existing.add(code);
+    }
+    next++;
+  }
+
+  const batch = writeBatch(db);
+  codes.forEach(code => {
+    batch.set(doc(db, "classes", classCode, "vouchers", code), {
+      code,
+      prefix,
+      classNumber,
+      sequence: code.slice(-2),
+      classId: classCode,
+      status: "available",
+      memberNik: "",
+      createdAt: serverTimestamp()
+    });
+  });
+
+  await batch.commit();
+  show($("voucherStatus"), `${count} voucher berhasil dibuat (${codes[0]} s.d. ${codes[codes.length-1]}).`, "success");
+  await loadVouchers(classCode);
+}if (!existing.has(code)) {
       codes.push(code);
       existing.add(code);
     }
