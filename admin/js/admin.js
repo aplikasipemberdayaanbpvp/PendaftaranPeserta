@@ -251,24 +251,20 @@ async function addVoucherBatch(event) {
 
   const classCode = $("voucherClassSelect").value;
   const prefix = $("voucherPrefix").value.trim().toUpperCase();
+  const classNumber = $("voucherClassNumber").value.trim().padStart(2, "0");
+  const startNumber = Number($("voucherStartNumber").value);
   const count = Number($("voucherCount").value);
 
   if (!classCode) return show($("voucherStatus"), "Pilih kelas terlebih dahulu.", "error");
-  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Kode kelas tidak valid.", "error");
+  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Prefix tidak valid.", "error");
+  if (!/^\d{1,2}$/.test($("voucherClassNumber").value)) return show($("voucherStatus"), "No kelas harus angka.", "error");
+  if (!Number.isInteger(startNumber) || startNumber < 1 || startNumber > 99) return show($("voucherStatus"), "No urut awal 1-99.", "error");
   if (!Number.isInteger(count) || count < 1 || count > 400) return show($("voucherStatus"), "Jumlah voucher 1-400.", "error");
 
-  // Nomor kelas mengikuti urutan kelas aktif (01, 02, 03...)
-  const sortedClasses = [...state.classes].sort((a,b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
-  let classIndex = sortedClasses.findIndex(c => c.code === classCode) + 1;
-  if (classIndex < 1) classIndex = 1;
-
-  const classNumber = String(classIndex).padStart(2, "0");
-
   const existing = new Set((state.vouchers.get(classCode) || []).map(v => v.code || v.id));
-
-  let next = 1;
   const codes = [];
 
+  let next = startNumber;
   while (codes.length < count) {
     const sequence = String(next).padStart(2, "0");
     const code = `${prefix}${classNumber}${sequence}`;
@@ -277,7 +273,6 @@ async function addVoucherBatch(event) {
       codes.push(code);
       existing.add(code);
     }
-
     next++;
   }
 
