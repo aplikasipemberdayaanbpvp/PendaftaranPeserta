@@ -252,46 +252,155 @@ async function addVoucherBatch(event) {
 
   const classCode = $("voucherClassSelect").value;
   const prefix = $("voucherPrefix").value.trim().toUpperCase();
-  const classNumberInput = $("voucherClassNumber").value.trim();
-  const startNumber = Number($("voucherStartNumber").value);
   const count = Number($("voucherCount").value);
 
   if (!classCode) return show($("voucherStatus"), "Pilih kelas terlebih dahulu.", "error");
-  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Prefix tidak valid.", "error");
-  if (!/^\\d{1,2}$/.test(classNumberInput)) return show($("voucherStatus"), "Kode kelas harus angka.", "error");
-  if (!Number.isInteger(startNumber) || startNumber < 1) return show($("voucherStatus"), "Nomor awal urut tidak valid.", "error");
+  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Kode kelas tidak valid.", "error");
   if (!Number.isInteger(count) || count < 1 || count > 400) return show($("voucherStatus"), "Jumlah voucher 1-400.", "error");
 
-  const classNumber = classNumberInput.padStart(2, "0");
+  // Nomor kelas mengikuti urutan kelas aktif (01, 02, 03...)
+  const sortedClasses = [...state.classes].sort((a,b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+  let classIndex = sortedClasses.findIndex(c => c.code === classCode) + 1;
+  if (classIndex < 1) classIndex = 1;
+
+  const classNumber = String(classIndex).padStart(2, "0");
+
   const existing = new Set((state.vouchers.get(classCode) || []).map(v => v.code || v.id));
+
+  let next = 1;
   const codes = [];
 
-  let next = startNumber;
   while (codes.length < count) {
     const sequence = String(next).padStart(2, "0");
     const code = `${prefix}${classNumber}${sequence}`;
+
     if (!existing.has(code)) {
       codes.push(code);
       existing.add(code);
     }
+
     next++;
   }
 
   const batch = writeBatch(db);
+
   codes.forEach(code => {
-    batch.set(doc(db, "classes", classCode, "vouchers", code), {
-      code,
-      prefix,
-      classNumber,
-      sequence: code.slice(-2),
-      classId: classCode,
-      status: "available",
-      memberNik: "",
-      createdAt: serverTimestamp()
-    });
+    batch.set(
+      doc(db, "classes", classCode, "vouchers", code),
+      {
+        code,
+        prefix,
+        classNumber,
+        sequence: code.slice(-2),
+        classId: classCode,
+        status: "available",
+        memberNik: "",
+        createdAt: serverTimestamp()
+      }
+    );
   });
 
   await batch.commit();
-  show($("voucherStatus"), `${count} voucher berhasil dibuat (${codes[0]} s.d. ${codes[codes.length-1]}).`, "success");
+
+  show(
+    $("voucherStatus"),
+    `${count} voucher berhasil dibuat (${codes[0]} s.d. ${codes[codes.length - 1]}).`,
+    "success"
+  );
+
   await loadVouchers(classCode);
 }
+
+function openMemberEdit(m) {
+  $("editNik").value = m.nik || m.id; $("editName").value = m.name || ""; $("editBirthPlace").value = m.birthPlace || ""; $("editBirthDate").value = m.birthDate || "";
+  $("editMotherName").value = m.motherName || ""; $("editAddress").value = m.address || ""; $("editAccountNumber").value = m.accountNumber || ""; $("editBankName").value = m.bankName || ""; $("editAccountHolder").value = m.accountHolder || ""; $("editShirtSize").value = m.shirtSize || "L";
+  $("memberEditStatus").classList.add("hidden"); $("memberDialog").showModal();
+}
+
+async function saveMemberEdit(event) {
+  event.preventDefault(); const nik = $("editNik").value;
+  try {
+    await updateDoc(doc(db,"members",nik), { name:$("editName").value.trim(), birthPlace:$("editBirthPlace").value.trim(), birthDate:$("editBirthDate").value, motherName:$("editMotherName").value.trim(), address:$("editAddress").value.trim(), accountNumber:$("editAccountNumber").value.trim(), bankName:$("editBankName").value.trim(), accountHolder:$("editAccountHolder").value.trim(), shirtSize:$("editShirtSize").value, updatedAt:serverTimestamp() });
+    $("memberDialog").close(); await loadMembers(); renderMembers(); renderDashboard();
+  } catch (error) { show($("memberEditStatus"), error.message || String(error), "error"); }
+}
+
+async function deleteMember(m) {
+  if (!(await askConfirm("🗑️ Hapus Peserta", `Data ${m.name} akan dihapus dan voucher dikembalikan.`, "Hapus"))) return;
+  const batch = writeBatch(db); batch.delete(doc(db,"members",m.nik || m.id));
+  if (m.classId && m.voucherCode) batch.update(doc(db,"classes",m.classId,"vouchers",m.voucherCode), { status:"available", memberNik:"", assignedAt:deleteField() });
+  await batch.commit(); await refreshData(); if ($("voucherClassSelect").value) await loadVouchers($("voucherClassSelect").value);
+}
+
+async function exportExcel() {
+  try {
+    const selected = $("exportClassSelect").value;
+    let rows = state.members.map((m,i)=>({No:i+1, "Nomor Identitas":m.nik||m.id||"", "Nama Lengkap":m.name||"", "Tanggal Lahir":m.birthDate||"", "Handphone":m.phone||m.handphone||"", "Email":m.email||"", "Alamat":m.address||"", "Nama Ibu Kandung":m.motherName||"", "Nama Pelatihan":(state.classes.find(c=>c.code===m.classId)||{}).name||m.classId||"", "Voucher":m.voucherCode||"", "Ukuran Baju":m.shirtSize||""}));
+    if(selected) rows = rows.filter((r,i)=>state.members[i] && state.members[i].classId===selected);
+    if(!rows.length) return show($("exportStatus"),"Tidak ada data peserta untuk diexport.","error");
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"]=[{wch:6},{wch:20},{wch:25},{wch:15},{wch:16},{wch:30},{wch:35},{wch:25},{wch:30},{wch:18},{wch:15}];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Peserta");
+    XLSX.writeFile(wb, selected ? `Peserta_${selected}.xlsx` : "Semua_Peserta.xlsx");
+    show($("exportStatus"),"Export Excel berhasil dibuat.","success");
+  } catch(e){ show($("exportStatus"),e.message||String(e),"error"); }
+}
+
+async function exportSpreadsheet() {
+  if (!cfg.backendUrl || cfg.backendUrl.includes("PASTE_APPS_SCRIPT")) return show($("exportStatus"), "Google Sheet belum dikonfigurasi. Isi backendUrl di config.js untuk fitur ini.", "warning");
+  $("exportButton").disabled = true; show($("exportStatus"), "Membuat Spreadsheet...", "info"); $("exportLink").classList.add("hidden");
+  try {
+    const idToken = await state.user.getIdToken(true); const response = await bridgeRequest("export", { idToken, classCode:$("exportClassSelect").value });
+    if (!response.success) throw new Error(response.message || "Export gagal.");
+    show($("exportStatus"), `Export berhasil: ${response.rowCount} peserta.`, "success"); $("exportLink").href = response.spreadsheetUrl; $("exportLink").classList.remove("hidden");
+  } catch (error) { show($("exportStatus"), error.message || String(error), "error"); }
+  finally { $("exportButton").disabled = false; }
+}
+
+async function refreshData() { await Promise.all([loadClasses(),loadMembers()]); await loadVoucherStats(); renderDashboard(); renderMembers(); renderClasses(); populateClassSelects(); }
+
+function openPage(page) {
+  state.page = page; document.querySelectorAll(".page-section").forEach((s)=>s.classList.add("hidden")); $("page-"+page).classList.remove("hidden");
+  document.querySelectorAll(".nav-btn[data-page]").forEach((b)=>b.classList.toggle("active",b.dataset.page===page));
+  const titles={dashboard:["Dashboard","Ringkasan data keanggotaan."],members:["Anggota","Kelola data anggota."],classes:["Kelas","Buat kelas dan link pendaftaran."],vouchers:["Voucher","Voucher selalu terikat ke kelas."],export:["Export","Kirim data Firestore ke Google Spreadsheet."]};
+  $("pageTitle").textContent=titles[page][0]; $("pageSubtitle").textContent=titles[page][1];
+}
+
+
+function askConfirm(title,text,button="Lanjut") {
+ return new Promise(resolve=>{
+  $("actionTitle").textContent=title; $("actionText").textContent=text; $("actionConfirm").textContent=button;
+  const btn=$("actionConfirm"); const handler=()=>{btn.removeEventListener("click",handler); $("actionDialog").close(); resolve(true)};
+  btn.addEventListener("click",handler); $("actionDialog").showModal();
+  $("actionDialog").addEventListener("close",()=>resolve(false),{once:true});
+ });
+}
+function openLinkDialog(cls, link){
+ $("linkClassName").textContent=cls.name || cls.code; $("linkValue").value=link;
+ $("linkDialog").showModal();
+ $("linkCopy").onclick=async()=>{await navigator.clipboard.writeText(link); $("linkCopy").textContent="✅ Tersalin";};
+ $("linkGo").onclick=()=>window.open(link,"_blank");
+}
+
+function publicClassLink(code) {
+  // Selalu arahkan ke halaman publik (index.html), bukan kembali ke folder admin
+  const url = new URL(window.location.href);
+  const adminPath = url.pathname.replace(/\\/g, "/");
+  const rootPath = adminPath.includes("/admin/")
+    ? adminPath.split("/admin/")[0] + "/"
+    : adminPath.substring(0, adminPath.lastIndexOf("/") + 1);
+  url.pathname = rootPath;
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("kelas", code);
+  return url.toString();
+}
+function statusHtml(status) { return `<span class="status ${escAttr(status || "closed")}">${esc(status || "-")}</span>`; }
+function maskNik(nik) { const s=String(nik||""); return s.length===16 ? `${s.slice(0,6)}******${s.slice(-4)}` : s; }
+function esc(value){return String(value??"").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+function escAttr(value){return esc(value).replace(/`/g,"&#096;");}
+function show(el,msg,type){el.className=`alert alert-${type}`;el.textContent=msg;el.classList.remove("hidden");}
+function friendlyAuthError(error){const c=error?.code||"";if(c.includes("invalid-credential"))return"Email atau password salah.";if(c.includes("too-many-requests"))return"Terlalu banyak percobaan login. Coba lagi nanti.";return error.message||String(error);}
+
+function bridgeRequest(action,payload){return new Promise((resolve,reject)=>{const requestId=crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`;const form=document.createElement("form");form.method="POST";form.action=cfg.backendUrl;form.target="apiBridgeFrame";form.style.display="none";Object.entries({action,requestId,frontendOrigin:location.origin,...payload}).forEach(([k,v])=>{const input=document.createElement("input");input.type="hidden";input.name=k;input.value=String(v??"");form.appendChild(input)});const timer=setTimeout(()=>{pendingRequests.delete(requestId);reject(new Error("Backend Apps Script tidak merespons."))},Number(cfg.requestTimeoutMs||45000));pendingRequests.set(requestId,{resolve:(d)=>{clearTimeout(timer);resolve(d)}});document.body.appendChild(form);form.submit();form.remove()})}
+function handleBridgeMessage(event){let trusted=false;try{const h=new URL(event.origin).hostname;trusted=h==="script.google.com"||h.endsWith("script.googleusercontent.com")}catch{}if(!trusted)return;const d=event.data;if(!d||d.source!=="anggota-registration-api"||!d.requestId)return;const p=pendingRequests.get(d.requestId);if(!p)return;pendingRequests.delete(d.requestId);p.resolve(d)}
