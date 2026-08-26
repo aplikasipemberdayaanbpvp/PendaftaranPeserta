@@ -292,7 +292,7 @@ async function exportExcel() {
   try {
     const selected = $("exportClassSelect").value;
     let rows = state.members.map((m,i)=>({No:i+1, "Nomor Identitas":m.nik||m.id||"", "Nama Lengkap":m.name||"", "Tanggal Lahir":m.birthDate||"", "Handphone":m.phone||m.handphone||"", "Email":m.email||"", "Alamat":m.address||"", "Nama Ibu Kandung":m.motherName||"", "Nama Pelatihan":(state.classes.find(c=>c.code===m.classId)||{}).name||m.classId||"", "Voucher":m.voucherCode||"", "Ukuran Baju":m.shirtSize||""}));
-    if(selected) rows = rows.filter(r=>r.KodeKelas===selected);
+    if(selected) rows = rows.filter((r,i)=>state.members[i] && state.members[i].classId===selected);
     if(!rows.length) return show($("exportStatus"),"Tidak ada data peserta untuk diexport.","error");
     const ws = XLSX.utils.json_to_sheet(rows);
     ws["!cols"]=[{wch:6},{wch:20},{wch:25},{wch:15},{wch:16},{wch:30},{wch:35},{wch:25},{wch:30},{wch:18},{wch:15}];

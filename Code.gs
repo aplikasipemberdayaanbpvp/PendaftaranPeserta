@@ -239,7 +239,7 @@ function exportToSpreadsheet_(data) {
 
   if (members.length) {
     const rows = members.map(function(m,i){return [
-      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', m.birthPlace||'', isoToDate_(m.birthDate), m.address||'', m.motherName||'',
+      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', m.birthPlace||'', isoToDate_(m.birthDate),
       m.phone||m.handphone||'', m.email||'', m.address||'', m.motherName||'', m.accountNumber||'', m.bankName||'', m.accountHolder||'', m.shirtSize||'', m.voucherCode||'', m.classId||''
     ];});
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,1,rows.length,headers[0].length).setValues(rows);
