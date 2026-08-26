@@ -37,7 +37,6 @@ const $ = (id) => document.getElementById(id);
 const state = { user: null, admin: null, classes: [], members: [], vouchers: new Map(), page: "dashboard" };
 const pendingRequests = new Map();
 
-bindUi();
 onAuthStateChanged(auth, handleAuthState);
 
 function bindUi() {
@@ -404,3 +403,7 @@ function friendlyAuthError(error){const c=error?.code||"";if(c.includes("invalid
 
 function bridgeRequest(action,payload){return new Promise((resolve,reject)=>{const requestId=crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`;const form=document.createElement("form");form.method="POST";form.action=cfg.backendUrl;form.target="apiBridgeFrame";form.style.display="none";Object.entries({action,requestId,frontendOrigin:location.origin,...payload}).forEach(([k,v])=>{const input=document.createElement("input");input.type="hidden";input.name=k;input.value=String(v??"");form.appendChild(input)});const timer=setTimeout(()=>{pendingRequests.delete(requestId);reject(new Error("Backend Apps Script tidak merespons."))},Number(cfg.requestTimeoutMs||45000));pendingRequests.set(requestId,{resolve:(d)=>{clearTimeout(timer);resolve(d)}});document.body.appendChild(form);form.submit();form.remove()})}
 function handleBridgeMessage(event){let trusted=false;try{const h=new URL(event.origin).hostname;trusted=h==="script.google.com"||h.endsWith("script.googleusercontent.com")}catch{}if(!trusted)return;const d=event.data;if(!d||d.source!=="anggota-registration-api"||!d.requestId)return;const p=pendingRequests.get(d.requestId);if(!p)return;pendingRequests.delete(d.requestId);p.resolve(d)}
+
+
+// init UI after all functions loaded
+bindUi();
