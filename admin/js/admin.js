@@ -251,7 +251,8 @@ async function addVoucherBatch(event) {
 
   const classCode = $("voucherClassSelect").value;
   const prefix = $("voucherPrefix").value.trim().toUpperCase();
-  const classNumber = $("voucherClassNumber").value.trim().padStart(2, "0");
+  const rawClassNumber = $("voucherClassNumber").value.trim();
+  const classNumber = String(Number(rawClassNumber)).padStart(2, "0");
   const startNumber = Number($("voucherStartNumber").value);
   const count = Number($("voucherCount").value);
 
