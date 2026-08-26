@@ -249,13 +249,20 @@ async function addSingleVoucher(event) {
 
 async function addVoucherBatch(event) {
   event.preventDefault(); const classCode = $("voucherClassSelect").value; const prefix = $("voucherPrefix").value.trim().toUpperCase();
-  const start = Number($("voucherStart").value); const count = Number($("voucherCount").value);
+  const count = Number($("voucherCount").value);
+  const classIndex = Math.max(0, state.classes.findIndex(c => c.code === classCode)) + 1;
+  const classNumber = String(classIndex).padStart(2,"0");
   if (!classCode) return show($("voucherStatus"), "Pilih kelas terlebih dahulu.", "error");
-  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Prefix voucher tidak valid.", "error");
-  if (!Number.isInteger(start) || start < 0 || !Number.isInteger(count) || count < 1 || count > 400) return show($("voucherStatus"), "Jumlah batch 1-400 voucher.", "error");
-  const codes = Array.from({length:count}, (_,i) => prefix + String(start+i).padStart(4,"0"));
-  const existing = new Set((state.vouchers.get(classCode)||[]).map((v) => v.code || v.id)); const duplicates = codes.filter((c)=>existing.has(c));
-  if (duplicates.length) return show($("voucherStatus"), `Batal: ${duplicates.length} kode sudah ada. Contoh ${duplicates[0]}.`, "error");
+  if (!/^[A-Z0-9_-]{1,15}$/.test(prefix)) return show($("voucherStatus"), "Kode kelas tidak valid.", "error");
+  if (!Number.isInteger(count) || count < 1 || count > 400) return show($("voucherStatus"), "Jumlah voucher 1-400.", "error");
+  const existing = new Set((state.vouchers.get(classCode)||[]).map((v) => v.code || v.id));
+  let next = 1;
+  const codes = [];
+  while (codes.length < count) {
+    const code = prefix + classNumber + String(next).padStart(2,"0");
+    if (!existing.has(code)) codes.push(code);
+    next++;
+  }
   const batch = writeBatch(db); codes.forEach((code) => batch.set(doc(db,"classes",classCode,"vouchers",code), {code,status:"available",memberNik:"",createdAt:serverTimestamp()}));
   await batch.commit(); show($("voucherStatus"), `${count} voucher berhasil dibuat (${codes[0]} s.d. ${codes[codes.length-1]}).`, "success"); await loadVouchers(classCode);
 }
