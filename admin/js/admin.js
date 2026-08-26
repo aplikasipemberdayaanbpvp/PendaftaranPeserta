@@ -158,12 +158,12 @@ function renderClasses() {
   state.classes.forEach((cls) => {
     const link = publicClassLink(cls.code);
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${esc(cls.code)}</td><td>${esc(cls.name || "-")}</td><td>${statusHtml(cls.status)}</td><td><button class="mini-btn copy">Salin Link</button></td><td><button class="mini-btn edit">Edit</button><button class="mini-btn danger delete">Hapus</button></td>`;
+    tr.innerHTML = `<td>${esc(cls.code)}</td><td>${esc(cls.name || "-")}</td><td>${esc(cls.startDate || "-")}</td><td>${esc(cls.endDate || "-")}</td><td>${statusHtml(cls.status)}</td><td><button class="mini-btn copy">Salin Link</button></td><td><button class="mini-btn edit">Edit</button><button class="mini-btn danger delete">Hapus</button></td>`;
     tr.querySelector(".copy").addEventListener("click", async () => { openLinkDialog(cls, link); });
     tr.querySelector(".edit").addEventListener("click", () => editClass(cls));
     tr.querySelector(".delete").addEventListener("click", () => removeClass(cls)); body.appendChild(tr);
   });
-  if (!state.classes.length) body.innerHTML = `<tr><td colspan="5">Belum ada kelas.</td></tr>`;
+  if (!state.classes.length) body.innerHTML = `<tr><td colspan="7">Belum ada kelas.</td></tr>`;
 }
 
 function populateClassSelects() {
@@ -179,20 +179,21 @@ function populateClassSelects() {
 async function saveClass(event) {
   event.preventDefault();
   const original = $("classOriginalCode").value; const code = $("classCode").value.trim().toUpperCase();
-  const name = $("className").value.trim(); const status = $("classStatusInput").value;
+  const name = $("className").value.trim(); const startDate = $("classStartDate").value; const endDate = $("classEndDate").value; const status = $("classStatusInput").value;
   if (!/^[A-Z0-9_-]{4,20}$/.test(code)) return show($("classFormStatus"), "Kode kelas 4-20 karakter: huruf, angka, _ atau -.", "error");
   if (name.length < 2) return show($("classFormStatus"), "Nama kelas wajib diisi.", "error");
+  if (startDate && endDate && startDate > endDate) return show($("classFormStatus"), "Tanggal selesai tidak boleh sebelum tanggal mulai.", "error");
   if (original && original !== code) return show($("classFormStatus"), "Kode kelas tidak dapat diubah setelah dibuat.", "error");
   try {
     const ref = doc(db, "classes", code); const existing = await getDoc(ref);
     if (!original && existing.exists()) return show($("classFormStatus"), "Kode kelas sudah digunakan.", "error");
-    if (existing.exists()) await updateDoc(ref, { name, status, updatedAt: serverTimestamp() });
-    else await setDoc(ref, { code, name, status, registrationSeq: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    if (existing.exists()) await updateDoc(ref, { name, startDate, endDate, status, updatedAt: serverTimestamp() });
+    else await setDoc(ref, { code, name, startDate, endDate, status, registrationSeq: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     show($("classFormStatus"), "Kelas berhasil disimpan.", "success"); resetClassForm(); await refreshData();
   } catch (error) { show($("classFormStatus"), error.message || String(error), "error"); }
 }
 
-function editClass(cls) { $("classOriginalCode").value = cls.code; $("classCode").value = cls.code; $("classCode").readOnly = true; $("className").value = cls.name || ""; $("classStatusInput").value = cls.status || "active"; window.scrollTo({top:0,behavior:"smooth"}); }
+function editClass(cls) { $("classOriginalCode").value = cls.code; $("classCode").value = cls.code; $("classCode").readOnly = true; $("className").value = cls.name || ""; $("classStartDate").value = cls.startDate || ""; $("classEndDate").value = cls.endDate || ""; $("classStatusInput").value = cls.status || "active"; window.scrollTo({top:0,behavior:"smooth"}); }
 function resetClassForm() { $("classForm").reset(); $("classOriginalCode").value = ""; $("classCode").readOnly = false; $("classStatusInput").value = "active"; }
 
 async function removeClass(cls) {

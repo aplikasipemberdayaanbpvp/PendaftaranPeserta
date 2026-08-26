@@ -60,11 +60,13 @@
             <input id="classOriginalCode" type="hidden">
             <label>Kode Kelas<input id="classCode" maxlength="20" placeholder="5AAE89A5" required></label>
             <label>Nama Kelas<input id="className" maxlength="100" placeholder="Kelas Lembang Batch 1" required></label>
+            <label>Tanggal Mulai<input id="classStartDate" type="date"></label>
+            <label>Tanggal Selesai<input id="classEndDate" type="date"></label>
             <label>Status<select id="classStatusInput"><option value="active">Aktif</option><option value="closed">Ditutup</option></select></label>
             <div class="button-row"><button id="classReset" class="btn secondary" type="button">Reset</button><button class="btn primary" type="submit">Simpan Kelas</button></div>
             <div id="classFormStatus" class="alert hidden"></div>
           </form>
-          <div class="panel table-wrap"><table><thead><tr><th>Kode</th><th>Nama</th><th>Status</th><th>Link</th><th>Aksi</th></tr></thead><tbody id="classTableBody"></tbody></table></div>
+          <div class="panel table-wrap"><table><thead><tr><th>Kode</th><th>Nama</th><th>Mulai</th><th>Selesai</th><th>Status</th><th>Link</th><th>Aksi</th></tr></thead><tbody id="classTableBody"></tbody></table></div>
         </div>
       </section>
 
