@@ -234,13 +234,12 @@ function exportToSpreadsheet_(data) {
   sheet.getRange('D1').setValue('Waktu Export').setFontWeight('bold');
   sheet.getRange('E1').setValue(new Date()).setNumberFormat('dd/MM/yyyy HH:mm:ss');
 
-  const headers = [['NO.','NIK','NAMA','TEMPAT LAHIR','TGL LAHIR','ALAMAT LENGKAP','NAMA IBU','Nomor Rekening','Nama BANK','Atas Nama Bank','Ukuran Baju','Kode Voucher','Kode Kelas']];
+  const headers = [['NO.','Nomor Identitas','Nama Lengkap','Tgl. Lahir','Handphone','Email','Alamat','Nama Ibu Kandung','Nama Pelatihan','Tgl Mulai-Selesai','Nama Industri / Perusahaan','Nomor Rekening','Nama Bank','Atas Nama Bank']];
   sheet.getRange(CONFIG.EXPORT_HEADER_ROW,1,1,headers[0].length).setValues(headers).setFontWeight('bold').setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true).setBackground('#D9EAF7');
 
   if (members.length) {
     const rows = members.map(function(m,i){return [
-      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', m.birthPlace||'', isoToDate_(m.birthDate), m.address||'', m.motherName||'',
-      m.accountNumber||'', m.bankName||'', m.accountHolder||'', m.shirtSize||'', m.voucherCode||'', m.classId||''
+      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', isoToDate_(m.birthDate), m.phone||'', m.email||'', m.address||'', m.motherName||'', m.classId||'', '', m.company||'', m.accountNumber||'', m.bankName||'', m.accountHolder||''
     ];});
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,1,rows.length,headers[0].length).setValues(rows);
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,2,rows.length,1).setNumberFormat('@');
@@ -249,7 +248,7 @@ function exportToSpreadsheet_(data) {
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,6,rows.length,1).setWrap(true);
   }
 
-  const widths=[60,150,190,140,110,360,170,150,125,185,105,120,120];
+  const widths=[60,150,190,110,130,220,300,170,150,180,220,150,120,180];
   widths.forEach(function(w,i){sheet.setColumnWidth(i+1,w);});
   sheet.setFrozenRows(CONFIG.EXPORT_HEADER_ROW);
   SpreadsheetApp.flush();
