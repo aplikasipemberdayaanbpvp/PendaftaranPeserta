@@ -27,6 +27,7 @@
     toggleBankFields();
     toggleOtherBank();
     await loadClass();
+    await loadProvinces();
   }
 
   function validateConfig() {
@@ -216,6 +217,58 @@ return "Alamat belum lengkap.";
   }
 
   function backToEdit() { $("previewSection").classList.add("hidden"); $("formSection").scrollIntoView({ behavior: "smooth", block: "start" }); }
+
+
+  async function loadProvinces() {
+    try {
+      const res = await bridgeRequest("getProvinces", {});
+      fillSelect("province", res.data || [], "Pilih Provinsi");
+      $("province").addEventListener("change", loadRegencies);
+      $("regency").addEventListener("change", loadDistricts);
+      $("district").addEventListener("change", loadVillages);
+    } catch (e) {
+      console.error("Gagal memuat provinsi", e);
+    }
+  }
+
+  async function loadRegencies() {
+    const id = $("province").value;
+    fillSelect("regency", [], "Pilih Kabupaten/Kota");
+    fillSelect("district", [], "Pilih Kecamatan");
+    fillSelect("village", [], "Pilih Desa/Kelurahan");
+    if (!id) return;
+    const res = await bridgeRequest("getRegencies", { provinceId:id });
+    fillSelect("regency", res.data || [], "Pilih Kabupaten/Kota");
+  }
+
+  async function loadDistricts() {
+    const id = $("regency").value;
+    fillSelect("district", [], "Pilih Kecamatan");
+    fillSelect("village", [], "Pilih Desa/Kelurahan");
+    if (!id) return;
+    const res = await bridgeRequest("getDistricts", { regencyId:id });
+    fillSelect("district", res.data || [], "Pilih Kecamatan");
+  }
+
+  async function loadVillages() {
+    const id = $("district").value;
+    fillSelect("village", [], "Pilih Desa/Kelurahan");
+    if (!id) return;
+    const res = await bridgeRequest("getVillages", { districtId:id });
+    fillSelect("village", res.data || [], "Pilih Desa/Kelurahan");
+  }
+
+  function fillSelect(id, items, placeholder) {
+    const el = $(id);
+    if (!el) return;
+    el.innerHTML = `<option value="">${placeholder}</option>`;
+    (items || []).forEach(x => {
+      const o=document.createElement("option");
+      o.value=x.id;
+      o.textContent=x.name;
+      el.appendChild(o);
+    });
+  }
 
   function bridgeRequest(action, payload) {
     return new Promise((resolve, reject) => {
