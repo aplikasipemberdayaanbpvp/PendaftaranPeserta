@@ -496,25 +496,67 @@ function getRequiredProperty_(name){const value=PropertiesService.getScriptPrope
 function getSpreadsheet_(){const id=getRequiredProperty_('SPREADSHEET_ID');return SpreadsheetApp.openById(id);}
 
 
-// === MASTER WILAYAH API ===
-// Import CSV wilayah ke Firestore collection:
-// provinces, regencies, districts, villages
+// === MASTER WILAYAH API (Spreadsheet Source) ===
+// Data wilayah dibaca dari Spreadsheet export.
+// Sheet wajib:
+// MASTER_PROVINCES
+// MASTER_REGENCIES
+// MASTER_DISTRICTS
+// MASTER_VILLAGES
+
+function getMasterSheetData_(sheetName){
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if(!sheet){
+    throw new Error('Sheet '+sheetName+' tidak ditemukan');
+  }
+
+  const values = sheet.getDataRange().getValues();
+  const headers = values.shift();
+
+  return values.map(function(row){
+    const obj={};
+    headers.forEach(function(h,i){
+      obj[h]=row[i];
+    });
+    return obj;
+  });
+}
+
 function getProvinces_(){
- return {success:true,data:masterQuery_('provinces')};
+  return {
+    success:true,
+    data:getMasterSheetData_('MASTER_PROVINCES')
+  };
 }
-function getRegencies_(id){
- return {success:true,data:masterQuery_('regencies', 'province_id', id)};
+
+function getRegencies_(provinceId){
+  return {
+    success:true,
+    data:getMasterSheetData_('MASTER_REGENCIES')
+      .filter(function(x){
+        return String(x.province_id)===String(provinceId);
+      })
+  };
 }
-function getDistricts_(id){
- return {success:true,data:masterQuery_('districts', 'regency_id', id)};
+
+function getDistricts_(regencyId){
+  return {
+    success:true,
+    data:getMasterSheetData_('MASTER_DISTRICTS')
+      .filter(function(x){
+        return String(x.regency_id)===String(regencyId);
+      })
+  };
 }
-function getVillages_(id){
- return {success:true,data:masterQuery_('villages', 'district_id', id)};
-}
-function masterQuery_(collection,field,id){
- const rows=firestoreRunQuery_([],{
-  from:[{collectionId:collection}],
- });
- return rows.map(firestoreDocumentToObject_).filter(x=>!id||String(x[field])===String(id))
- .map(x=>({id:x.id||x.__name.split('/').pop(),name:x.name}));
+
+function getVillages_(districtId){
+  return {
+    success:true,
+    data:getMasterSheetData_('MASTER_VILLAGES')
+      .filter(function(x){
+        return String(x.district_id)===String(districtId);
+      })
+  };
 }
