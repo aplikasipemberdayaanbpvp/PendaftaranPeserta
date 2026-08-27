@@ -277,7 +277,7 @@ function verifyFirebaseAdmin_(idToken) {
 function validateRegistrationInput_(data, finalSubmission) {
   const classCode = validateClassCode_(data.classCode);
   const nik = cleanText_(data.nik);
-  const name=cleanText_(data.name), birthPlace=cleanText_(data.birthPlace), birthDate=cleanText_(data.birthDate), address=cleanText_(data.address), motherName=cleanText_(data.motherName), shirtSize=cleanText_(data.shirtSize).toUpperCase();
+  const name=cleanText_(data.name), phone=cleanText_(data.phone), email=cleanText_(data.email), birthPlace=cleanText_(data.birthPlace), birthDate=cleanText_(data.birthDate), address=cleanText_(data.address), motherName=cleanText_(data.motherName), shirtSize=cleanText_(data.shirtSize).toUpperCase();
   const bankPending = ['true','on','1'].indexOf(String(data.bankPending).toLowerCase()) !== -1;
   if (!/^\d{16}$/.test(nik)) throw new Error('NIK harus terdiri dari tepat 16 digit angka.');
   if (name.length<2||name.length>100) throw new Error('Nama lengkap wajib diisi dengan benar.');
@@ -298,7 +298,7 @@ function validateRegistrationInput_(data, finalSubmission) {
   const finalAddress = finalSubmission ? cleanText_(data.finalAddress) : address;
   if (finalSubmission && (finalBirthPlace.length<2||finalBirthPlace.length>80)) throw new Error('Tempat lahir hasil preview tidak valid.');
   if (finalSubmission && (finalAddress.length<8||finalAddress.length>500)) throw new Error('Alamat hasil preview tidak valid.');
-  return {classCode,nik,name,birthPlace,birthDate,address,motherName,bankPending,accountNumber,bankName,accountHolder,shirtSize,finalBirthPlace,finalAddress};
+  return {classCode,nik,name,phone,email,birthPlace,birthDate,address,motherName,bankPending,accountNumber,bankName,accountHolder,shirtSize,finalBirthPlace,finalAddress};
 }
 
 function validateClassCode_(value) {
