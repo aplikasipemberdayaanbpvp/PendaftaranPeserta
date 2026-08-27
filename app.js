@@ -317,25 +317,4 @@ console.log("DATA KIRIM:", values);
 })();
 
 
-// === WILAYAH CASCADING DROPDOWN ===
-async function loadWilayah(action, extra={}) {
-  const body = new URLSearchParams({action, ...extra});
-  const res = await fetch((window.APP_CONFIG||{}).backendUrl,{
-    method:"POST", body,
-    headers:{"Content-Type":"application/x-www-form-urlencoded"}
-  });
-  return await res.json();
-}
-async function initWilayahDropdown(){
- const p=document.getElementById("province");
- const r=document.getElementById("regency");
- const d=document.getElementById("district");
- const v=document.getElementById("village");
- if(!p) return;
- const provinces=(await loadWilayah("getProvinces")).data||[];
- p.innerHTML='<option value="">Pilih Provinsi</option>'+provinces.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");
- p.onchange=async()=>{r.innerHTML='<option>Memuat...</option>'; const data=(await loadWilayah("getRegencies",{provinceId:p.value})).data||[]; r.innerHTML='<option value="">Pilih Kabupaten/Kota</option>'+data.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");};
- r.onchange=async()=>{d.innerHTML='<option>Memuat...</option>'; const data=(await loadWilayah("getDistricts",{regencyId:r.value})).data||[]; d.innerHTML='<option value="">Pilih Kecamatan</option>'+data.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");};
- d.onchange=async()=>{v.innerHTML='<option>Memuat...</option>'; const data=(await loadWilayah("getVillages",{districtId:d.value})).data||[]; v.innerHTML='<option value="">Pilih Desa/Kelurahan</option>'+data.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");};
-}
-document.addEventListener("DOMContentLoaded", initWilayahDropdown);
+// wilayah dropdown handled by existing bridge functions
