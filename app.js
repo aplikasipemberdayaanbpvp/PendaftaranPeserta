@@ -125,7 +125,7 @@
     $("province").value.trim();
 
 
-  return `${street}, RT ${rt}/RW ${rw}, Desa ${village}, Kec. ${district}, Kab. ${regency}, ${province}`;
+  return `${street}, RT ${rt}/RW ${rw}, Desa ${village}, Kecamatan ${district}, Kabupaten ${regency}, Provinsi ${province}`;
 }
 
   function validateData(data) {
