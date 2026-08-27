@@ -75,6 +75,10 @@ function doPost(e) {
     else if (action === 'preview') result = previewRegistration_(e.parameter);
     else if (action === 'submit') result = saveRegistration_(e.parameter);
     else if (action === 'export') result = exportToSpreadsheet_(e.parameter);
+    else if (action === 'getProvinces') result = getProvinces_();
+    else if (action === 'getRegencies') result = getRegencies_(e.parameter.provinceId);
+    else if (action === 'getDistricts') result = getDistricts_(e.parameter.regencyId);
+    else if (action === 'getVillages') result = getVillages_(e.parameter.districtId);
     else throw new Error('Action tidak dikenal: ' + action);
 
     result.source='anggota-registration-api';
@@ -179,7 +183,7 @@ function registerInFirestoreTransaction_(input, rawData) {
     const className = resourceRoot + '/documents/classes/' + input.classCode;
 
     const memberFields = encodeFields_({
-      nik:input.nik, name:input.name, phone:input.phone || "", email:input.email || "", birthPlace:input.finalBirthPlace, birthDate:input.birthDate, address:input.finalAddress,
+      nik:input.nik, name:input.name, phone:input.phone, email:input.email, birthPlace:input.finalBirthPlace, birthDate:input.birthDate, address:input.finalAddress,
       motherName:input.motherName, bankPending:input.bankPending, accountNumber:input.bankPending ? '' : input.accountNumber,
       bankName:input.bankPending ? 'Menyusul' : input.bankName, accountHolder:input.bankPending ? '' : input.accountHolder,
       shirtSize:input.shirtSize, classId:input.classCode, voucherCode:voucher.code || voucherDoc.name.split('/').pop(),
@@ -234,13 +238,13 @@ function exportToSpreadsheet_(data) {
   sheet.getRange('D1').setValue('Waktu Export').setFontWeight('bold');
   sheet.getRange('E1').setValue(new Date()).setNumberFormat('dd/MM/yyyy HH:mm:ss');
 
-  const headers = [['NO.','NIK','NAMA','TEMPAT LAHIR','TGL LAHIR','HANDPHONE','EMAIL','ALAMAT LENGKAP','NAMA IBU','Nomor Rekening','Nama BANK','Atas Nama Bank','Ukuran Baju','Kode Voucher','Kode Kelas']];
+  const headers = [['NO.','NIK','NAMA','TEMPAT LAHIR','TGL LAHIR','ALAMAT LENGKAP','NAMA IBU','Nomor Rekening','Nama BANK','Atas Nama Bank','Ukuran Baju','Kode Voucher','Kode Kelas']];
   sheet.getRange(CONFIG.EXPORT_HEADER_ROW,1,1,headers[0].length).setValues(headers).setFontWeight('bold').setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true).setBackground('#D9EAF7');
 
   if (members.length) {
     const rows = members.map(function(m,i){return [
-      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', m.birthPlace||'', isoToDate_(m.birthDate),
-      m.phone||m.handphone||'', m.email||'', m.address||'', m.motherName||'', m.accountNumber||'', m.bankName||'', m.accountHolder||'', m.shirtSize||'', m.voucherCode||'', m.classId||''
+      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', m.birthPlace||'', isoToDate_(m.birthDate), m.address||'', m.motherName||'',
+      m.accountNumber||'', m.bankName||'', m.accountHolder||'', m.shirtSize||'', m.voucherCode||'', m.classId||''
     ];});
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,1,rows.length,headers[0].length).setValues(rows);
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,2,rows.length,1).setNumberFormat('@');
@@ -421,10 +425,54 @@ function choosePlaceSuggestion_(original,localPlace,aiResult){
 }
 
 /* ========================= BRIDGE / ORIGIN ========================= */
-function bridgeResponse_(payload,targetOrigin){
-  const safePayload=JSON.stringify(payload).replace(/</g,'\\u003c').replace(/>/g,'\\u003e'); const safeOrigin=JSON.stringify(targetOrigin||'*');
-  const html=['<!doctype html>','<html><head><meta charset="utf-8"></head><body>','<script>','(function(){','var data='+safePayload+';','var targetOrigin='+safeOrigin+';','if(window.top){window.top.postMessage(data,targetOrigin);}else if(window.parent){window.parent.postMessage(data,targetOrigin);}','})();','<\\/script>','</body></html>'].join('');
-  return HtmlService.createHtmlOutput(html).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function bridgeResponse_(payload, targetOrigin) {
+
+  const safePayload =
+    JSON.stringify(payload)
+      .replace(/</g, "\\u003c")
+      .replace(/>/g, "\\u003e");
+
+
+  const safeOrigin =
+    targetOrigin || "*";
+
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<script>
+
+(function(){
+
+  const data = ${safePayload};
+
+  console.log("BRIDGE RESPONSE", data);
+
+
+  window.top.postMessage(
+    data,
+    "${safeOrigin}"
+  );
+
+
+})();
+
+</script>
+</body>
+</html>
+`;
+
+
+  return HtmlService
+    .createHtmlOutput(html)
+    .setXFrameOptionsMode(
+      HtmlService.XFrameOptionsMode.ALLOWALL
+    );
+
 }
 function isOriginAllowed_(origin){if(!origin)return false;return getAllowedOrigins_().indexOf(origin)!==-1;}
 function getAllowedOrigins_(){return (PropertiesService.getScriptProperties().getProperty('ALLOWED_FRONTEND_ORIGINS')||'').split(',').map(cleanText_).filter(Boolean);}
@@ -446,3 +494,27 @@ function parseIsoDate_(value){return Utilities.parseDate(value,'Asia/Jakarta','y
 function isoToDate_(value){try{return parseIsoDate_(String(value||''));}catch(_){return value||'';}}
 function getRequiredProperty_(name){const value=PropertiesService.getScriptProperties().getProperty(name);if(!value)throw new Error('Script Property '+name+' belum dikonfigurasi.');return value;}
 function getSpreadsheet_(){const id=getRequiredProperty_('SPREADSHEET_ID');return SpreadsheetApp.openById(id);}
+
+
+// === MASTER WILAYAH API ===
+// Import CSV wilayah ke Firestore collection:
+// provinces, regencies, districts, villages
+function getProvinces_(){
+ return {success:true,data:masterQuery_('provinces')};
+}
+function getRegencies_(id){
+ return {success:true,data:masterQuery_('regencies', 'province_id', id)};
+}
+function getDistricts_(id){
+ return {success:true,data:masterQuery_('districts', 'regency_id', id)};
+}
+function getVillages_(id){
+ return {success:true,data:masterQuery_('villages', 'district_id', id)};
+}
+function masterQuery_(collection,field,id){
+ const rows=firestoreRunQuery_([],{
+  from:[{collectionId:collection}],
+ });
+ return rows.map(firestoreDocumentToObject_).filter(x=>!id||String(x[field])===String(id))
+ .map(x=>({id:x.id||x.__name.split('/').pop(),name:x.name}));
+}
