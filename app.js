@@ -112,18 +112,15 @@
   const rw =
     $("rw").value.trim();
 
-  const village =
-    $("village").value.trim();
+  const getSelectText = (id) => {
+    const el = $(id);
+    return el?.options[el.selectedIndex]?.text?.trim() || "";
+  };
 
-  const district =
-    $("district").value.trim();
-
-  const regency =
-    $("regency").value.trim();
-
-  const province =
-    $("province").value.trim();
-
+  const village = getSelectText("village");
+  const district = getSelectText("district");
+  const regency = getSelectText("regency");
+  const province = getSelectText("province");
 
   return `${street}, RT ${rt}/RW ${rw}, Desa ${village}, Kecamatan ${district}, Kabupaten ${regency}, Provinsi ${province}`;
 }
