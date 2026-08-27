@@ -238,13 +238,28 @@ function exportToSpreadsheet_(data) {
   sheet.getRange('D1').setValue('Waktu Export').setFontWeight('bold');
   sheet.getRange('E1').setValue(new Date()).setNumberFormat('dd/MM/yyyy HH:mm:ss');
 
-  const headers = [['NO.','NIK','NAMA','TEMPAT LAHIR','TGL LAHIR','ALAMAT LENGKAP','NAMA IBU','Nomor Rekening','Nama BANK','Atas Nama Bank','Ukuran Baju','Kode Voucher','Kode Kelas']];
+  const headers = [['NO.','NIK','NAMA LENGKAP','TEMPAT LAHIR','TGL LAHIR','NO HANDPHONE','EMAIL','ALAMAT LENGKAP','NAMA IBU KANDUNG','NAMA PELATIHAN','TGL MULAI-SELESAI','NOMOR REKENING','NAMA BANK','ATAS NAMA BANK','UKURAN BAJU','KODE VOUCHER','KODE KELAS']];
   sheet.getRange(CONFIG.EXPORT_HEADER_ROW,1,1,headers[0].length).setValues(headers).setFontWeight('bold').setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true).setBackground('#D9EAF7');
 
   if (members.length) {
     const rows = members.map(function(m,i){return [
-      m.registrationNumber || (i+1), String(m.nik||''), m.name||'', m.birthPlace||'', isoToDate_(m.birthDate), m.address||'', m.motherName||'',
-      m.accountNumber||'', m.bankName||'', m.accountHolder||'', m.shirtSize||'', m.voucherCode||'', m.classId||''
+      m.registrationNumber || (i+1),
+      String(m.nik||''),
+      m.name||'',
+      m.birthPlace||'',
+      isoToDate_(m.birthDate),
+      m.phone||m.handphone||m.noHandphone||'',
+      m.email||'',
+      buildFullAddressExport_(m),
+      m.motherName||'',
+      m.trainingName||m.className||'',
+      buildTrainingDateExport_(m),
+      m.accountNumber||'',
+      m.bankName||'',
+      m.accountHolder||'',
+      m.shirtSize||'',
+      m.voucherCode||'',
+      m.classId||''
     ];});
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,1,rows.length,headers[0].length).setValues(rows);
     sheet.getRange(CONFIG.EXPORT_DATA_ROW,2,rows.length,1).setNumberFormat('@');
@@ -258,6 +273,24 @@ function exportToSpreadsheet_(data) {
   sheet.setFrozenRows(CONFIG.EXPORT_HEADER_ROW);
   SpreadsheetApp.flush();
   return { success:true, rowCount:members.length, spreadsheetUrl:ss.getUrl(), sheetName:safeName };
+}
+
+
+function buildFullAddressExport_(m){
+  return [
+    m.addressDetail || m.address || '',
+    m.villageName ? 'Desa '+m.villageName : '',
+    m.districtName ? 'Kecamatan '+m.districtName : '',
+    m.regencyName ? 'Kabupaten '+m.regencyName : '',
+    m.provinceName ? 'Provinsi '+m.provinceName : ''
+  ].filter(Boolean).join(', ');
+}
+
+function buildTrainingDateExport_(m){
+  if (m.startDate && m.endDate){
+    return m.startDate+' - '+m.endDate;
+  }
+  return m.trainingDate || '';
 }
 
 function verifyFirebaseAdmin_(idToken) {
