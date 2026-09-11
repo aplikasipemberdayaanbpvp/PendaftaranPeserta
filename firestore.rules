@@ -5,7 +5,7 @@ service cloud.firestore {
       return request.auth != null
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
         && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin';
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin','keuangan'];
     }
 
     // Data sensitif hanya dapat dibaca/diubah oleh admin dari panel.

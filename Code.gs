@@ -306,7 +306,7 @@ function verifyFirebaseAdmin_(idToken) {
   const adminDoc = firestoreGetDocument_(['admins', user.localId]);
   if (!adminDoc) return null;
   const admin = firestoreDocumentToObject_(adminDoc);
-  if (admin.role !== 'admin' || admin.active !== true) return null;
+  if (!['admin','keuangan'].includes(admin.role) || admin.active !== true) return null;
   return {uid:user.localId,email:user.email||'',admin};
 }
 

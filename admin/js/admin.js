@@ -45,6 +45,7 @@ function bindUi() {
   $("actionCancel").onclick=()=>$("actionDialog").close();
   $("linkClose").onclick=()=>$("linkDialog").close();
   document.querySelectorAll(".nav-btn[data-page]").forEach((btn) => btn.addEventListener("click", () => openPage(btn.dataset.page)));
+  if ($("financeCalculate")) $("financeCalculate").addEventListener("click", renderFinance);
   $("classForm").addEventListener("submit", saveClass);
   $("classReset").addEventListener("click", resetClassForm);
   $("memberSearch").addEventListener("input", renderMembers);
@@ -80,15 +81,16 @@ async function handleAuthState(user) {
   }
   try {
     const adminSnap = await getDoc(doc(db, "admins", user.uid));
-    if (!adminSnap.exists() || adminSnap.data().role !== "admin" || adminSnap.data().active !== true) {
+    if (!adminSnap.exists() || !(["admin","keuangan"].includes(adminSnap.data().role)) || adminSnap.data().active !== true) {
       await signOut(auth);
-      show($("loginStatus"), "Akun ini belum memiliki akses admin aktif.", "error");
+      show($("loginStatus"), "Akun ini belum memiliki akses aktif.", "error");
       return;
     }
     state.user = user; state.admin = adminSnap.data();
     $("loginView").classList.add("hidden"); $("adminView").classList.remove("hidden");
     $("adminIdentity").textContent = state.admin.name || user.email || "Admin";
     await loadAll();
+    applyRoleMenu();
   } catch (error) {
     show($("loginStatus"), error.message || String(error), "error");
   }
@@ -354,10 +356,39 @@ async function exportSpreadsheet() {
 
 async function refreshData() { await Promise.all([loadClasses(),loadMembers()]); await loadVoucherStats(); renderDashboard(); renderMembers(); renderClasses(); populateClassSelects(); }
 
+function applyRoleMenu(){
+  const role=state.admin?.role;
+  document.querySelectorAll(".admin-only").forEach(e=>e.style.display=role==="admin"?"block":"none");
+  document.querySelectorAll(".finance-only").forEach(e=>e.style.display=role==="keuangan"?"block":"none");
+}
+
+function renderFinance(){
+  const start=$("financeStart").value;
+  const end=$("financeEnd").value;
+  const amount=Number($("financeAmount").value||0);
+  if(!start||!end)return;
+  let days=0;
+  const holidays=[];
+  let d=new Date(start);
+  const last=new Date(end);
+  while(d<=last){
+    const day=d.getDay();
+    const iso=d.toISOString().slice(0,10);
+    if(day!==0&&day!==6&&!holidays.includes(iso)) days++;
+    d.setDate(d.getDate()+1);
+  }
+  $("financeEffectiveDays").textContent=days;
+  $("financeDailyAmount").textContent=new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(amount);
+  $("financeMemberCount").textContent=state.members.length;
+  const total=days*amount*state.members.length;
+  $("financeTotal").textContent=new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(total);
+  $("financeTableBody").innerHTML=state.members.map(m=>`<tr><td>${esc(m.name||"-")}</td><td>${esc(m.classId||"-")}</td><td>${new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(days*amount)}</td></tr>`).join("");
+}
+
 function openPage(page) {
   state.page = page; document.querySelectorAll(".page-section").forEach((s)=>s.classList.add("hidden")); $("page-"+page).classList.remove("hidden");
   document.querySelectorAll(".nav-btn[data-page]").forEach((b)=>b.classList.toggle("active",b.dataset.page===page));
-  const titles={dashboard:["Dashboard","Ringkasan data keanggotaan."],members:["Anggota","Kelola data anggota."],classes:["Kelas","Buat kelas dan link pendaftaran."],vouchers:["Voucher","Voucher selalu terikat ke kelas."],export:["Export","Kirim data Firestore ke Google Spreadsheet."]};
+  const titles={dashboard:["Dashboard","Ringkasan data keanggotaan."],members:["Anggota","Kelola data anggota."],classes:["Kelas","Buat kelas dan link pendaftaran."],vouchers:["Voucher","Voucher selalu terikat ke kelas."],export:["Export","Kirim data Firestore ke Google Spreadsheet."],keuangan:["Keuangan","Kelola rekening dan uang saku peserta."]};
   $("pageTitle").textContent=titles[page][0]; $("pageSubtitle").textContent=titles[page][1];
 }
 

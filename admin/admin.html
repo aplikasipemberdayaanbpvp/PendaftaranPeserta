@@ -11,7 +11,7 @@
     <form id="loginForm" class="login-card">
       <p class="eyebrow">ADMIN PANEL</p>
       <h1>Masuk Admin</h1>
-      <p class="muted">Gunakan akun Firebase Authentication yang sudah diberi role admin.</p>
+      <p class="muted">Gunakan akun Firebase Authentication dengan role admin atau keuangan.</p>
       <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
       <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
       <div id="loginStatus" class="alert hidden"></div>
@@ -27,7 +27,8 @@
         <button data-page="members" class="nav-btn">👥 Peserta</button>
         <button data-page="classes" class="nav-btn">📚 Kelas</button>
         <button data-page="vouchers" class="nav-btn">🎟️ Voucher</button>
-        <button data-page="export" class="nav-btn">📊 Export</button>
+        <button data-page="export" class="nav-btn admin-only">📊 Export</button>
+        <button data-page="keuangan" class="nav-btn finance-only">💰 Keuangan</button>
       </nav>
       <button id="logoutButton" class="nav-btn danger">🚪 Keluar</button>
     </aside>
@@ -96,6 +97,25 @@
           <a id="exportLink" class="result-link hidden" target="_blank" rel="noopener">Buka Spreadsheet</a>
         </div>
       </section>
+      <section id="page-keuangan" class="page-section hidden">
+        <div class="stats">
+          <article><span>Total Peserta</span><strong id="financeMemberCount">0</strong></article>
+          <article><span>Hari Efektif</span><strong id="financeEffectiveDays">0</strong></article>
+          <article><span>Nominal / Hari</span><strong id="financeDailyAmount">Rp0</strong></article>
+          <article><span>Total Uang Saku</span><strong id="financeTotal">Rp0</strong></article>
+        </div>
+        <div class="panel form-panel">
+          <h2>Perhitungan Uang Saku</h2>
+          <div class="grid-2">
+            <label>Tanggal Mulai<input id="financeStart" type="date"></label>
+            <label>Tanggal Selesai<input id="financeEnd" type="date"></label>
+          </div>
+          <label>Nominal per hari<input id="financeAmount" type="number" value="35000"></label>
+          <button id="financeCalculate" class="btn primary">Hitung Hari Efektif</button>
+        </div>
+        <div class="panel table-wrap"><table><thead><tr><th>Peserta</th><th>Kelas</th><th>Estimasi Uang Saku</th></tr></thead><tbody id="financeTableBody"></tbody></table></div>
+      </section>
+
     </main>
   </div>
 
