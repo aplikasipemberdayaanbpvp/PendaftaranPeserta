@@ -360,6 +360,13 @@ function applyRoleMenu(){
   const role=state.admin?.role;
   document.querySelectorAll(".admin-only").forEach(e=>e.style.display=role==="admin"?"block":"none");
   document.querySelectorAll(".finance-only").forEach(e=>e.style.display=role==="keuangan"?"block":"none");
+
+  // Pastikan landing page sesuai role agar menu tidak tumpang tindih.
+  if(role === "keuangan") {
+    openPage("keuangan");
+  } else if(role === "admin") {
+    openPage("dashboard");
+  }
 }
 
 function renderFinance(){
