@@ -1,47 +1,10 @@
 {
-  "users": {
-    "UID_USER": {
-      "name": "Keuangan BPVP",
-      "email": "keuangan@bpvp.id",
-      "role": "keuangan",
-      "active": true
-    }
-  },
-  "rekening": {
-    "AUTO_ID": {
-      "pesertaId": "NIK_PESERTA",
-      "bank": "BRI",
-      "nomorRekening": "000000000",
-      "namaPemilik": "Nama Peserta"
-    }
-  },
-  "aturan_uang_saku": {
-    "AUTO_ID": {
-      "pelatihanId": "KODE_KELAS",
-      "nominalHarian": 35000,
-      "tanggalMulai": "2026-09-01",
-      "tanggalSelesai": "2026-09-30"
-    }
-  },
-  "kalender_libur": {
-    "AUTO_ID": {
-      "tanggal": "2026-09-24",
-      "keterangan": "Libur Nasional"
-    }
-  },
-  "uang_saku": {
-    "AUTO_ID": {
-      "pesertaId": "NIK_PESERTA",
-      "hariEfektif": 21,
-      "nominalHarian": 35000,
-      "total": 735000,
-      "status": "draft"
-    }
-  },
-  "dokumen_keuangan": {
-    "AUTO_ID": {
-      "jenis": "SPJ",
-      "status": "draft"
-    }
-  }
+  "existing": "members",
+  "finance": "uses members.bankName and members.accountNumber",
+  "new_collections": [
+    "finance/holidays",
+    "finance/allowance_rules",
+    "finance/spj",
+    "finance/sptjb"
+  ]
 }

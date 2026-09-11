@@ -34,7 +34,7 @@ const db = getFirestore(app);
 const cfg = window.APP_CONFIG || {};
 const $ = (id) => document.getElementById(id);
 
-const state = { user: null, admin: null, classes: [], members: [], vouchers: new Map(), page: "dashboard" };
+const state = { user: null, admin: null, classes: [], members: [], vouchers: new Map(), page: "dashboard", financeMembers: [] };
 const pendingRequests = new Map();
 
 onAuthStateChanged(auth, handleAuthState);
@@ -46,6 +46,8 @@ function bindUi() {
   $("linkClose").onclick=()=>$("linkDialog").close();
   document.querySelectorAll(".nav-btn[data-page]").forEach((btn) => btn.addEventListener("click", () => openPage(btn.dataset.page)));
   if ($("financeCalculate")) $("financeCalculate").addEventListener("click", renderFinance);
+  if ($("financeBankFilter")) $("financeBankFilter").addEventListener("change", renderFinanceDashboard);
+  if ($("financeSearch")) $("financeSearch").addEventListener("input", renderFinanceDashboard);
   $("classForm").addEventListener("submit", saveClass);
   $("classReset").addEventListener("click", resetClassForm);
   $("memberSearch").addEventListener("input", renderMembers);
@@ -112,6 +114,7 @@ async function loadClasses() {
 async function loadMembers() {
   const snap = await getDocs(collection(db, "members"));
   state.members = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a,b) => Number(a.registrationNumber || 0) - Number(b.registrationNumber || 0));
+  state.financeMembers = state.members;
 }
 
 async function loadVoucherStats() {
@@ -369,6 +372,24 @@ function applyRoleMenu(){
   }
 }
 
+function renderFinanceDashboard(){
+  const data = state.financeMembers || state.members;
+  const bank = {};
+  data.forEach(m=>{ const b=(m.bankName||"Belum Ada").trim(); bank[b]=(bank[b]||0)+1; });
+  const banks=Object.entries(bank).sort((a,b)=>b[1]-a[1]);
+  $("financeMemberCount").textContent=data.length;
+  $("financeAccountCount").textContent=data.filter(m=>m.accountNumber).length;
+  $("financeTopBank").textContent=banks[0]?.[0] || "-";
+  $("financeBankCount").textContent=banks.length;
+  if($("financeBankCards")) $("financeBankCards").innerHTML=banks.map(x=>`<article><span>${esc(x[0])}</span><strong>${x[1]}</strong></article>`).join("");
+  const select=$("financeBankFilter");
+  if(select && select.options.length===1) banks.forEach(x=>select.insertAdjacentHTML("beforeend",`<option value="${esc(x[0])}">${esc(x[0])}</option>`));
+  const filter=select?.value||"";
+  const search=($("financeSearch")?.value||"").toLowerCase();
+  const rows=data.filter(m=>(!filter||(m.bankName||"")===filter)&&(!search||(m.name||"").toLowerCase().includes(search)));
+  $("financeTableBody").innerHTML=rows.map(m=>`<tr><td>${esc(m.name||"-")}</td><td>${esc(m.bankName||"-")}</td><td>${esc(m.accountNumber||"-")}</td><td>${esc(m.classId||"-")}</td></tr>`).join("");
+}
+
 function renderFinance(){
   const start=$("financeStart").value;
   const end=$("financeEnd").value;
@@ -393,9 +414,9 @@ function renderFinance(){
 }
 
 function openPage(page) {
-  state.page = page; document.querySelectorAll(".page-section").forEach((s)=>s.classList.add("hidden")); $("page-"+page).classList.remove("hidden");
+  state.page = page; if(page==="keuangan") renderFinanceDashboard(); document.querySelectorAll(".page-section").forEach((s)=>s.classList.add("hidden")); $("page-"+page).classList.remove("hidden");
   document.querySelectorAll(".nav-btn[data-page]").forEach((b)=>b.classList.toggle("active",b.dataset.page===page));
-  const titles={dashboard:["Dashboard","Ringkasan data keanggotaan."],members:["Anggota","Kelola data anggota."],classes:["Kelas","Buat kelas dan link pendaftaran."],vouchers:["Voucher","Voucher selalu terikat ke kelas."],export:["Export","Kirim data Firestore ke Google Spreadsheet."],keuangan:["Keuangan","Kelola rekening dan uang saku peserta."]};
+  const titles={dashboard:["Dashboard","Ringkasan data keanggotaan."],members:["Anggota","Kelola data anggota."],classes:["Kelas","Buat kelas dan link pendaftaran."],vouchers:["Voucher","Voucher selalu terikat ke kelas."],export:["Export","Kirim data Firestore ke Google Spreadsheet."],keuangan:["Keuangan","Dashboard rekening dan data bank peserta."]};
   $("pageTitle").textContent=titles[page][0]; $("pageSubtitle").textContent=titles[page][1];
 }
 

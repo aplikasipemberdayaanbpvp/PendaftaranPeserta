@@ -100,20 +100,27 @@
       <section id="page-keuangan" class="page-section hidden">
         <div class="stats">
           <article><span>Total Peserta</span><strong id="financeMemberCount">0</strong></article>
-          <article><span>Hari Efektif</span><strong id="financeEffectiveDays">0</strong></article>
-          <article><span>Nominal / Hari</span><strong id="financeDailyAmount">Rp0</strong></article>
-          <article><span>Total Uang Saku</span><strong id="financeTotal">Rp0</strong></article>
+          <article><span>Total Rekening</span><strong id="financeAccountCount">0</strong></article>
+          <article><span>Bank Terbanyak</span><strong id="financeTopBank">-</strong></article>
+          <article><span>Bank Terdaftar</span><strong id="financeBankCount">0</strong></article>
         </div>
-        <div class="panel form-panel">
-          <h2>Perhitungan Uang Saku</h2>
+
+        <div class="panel">
+          <h2>Distribusi Bank</h2>
+          <div id="financeBankCards" class="stats"></div>
+        </div>
+
+        <div class="panel table-wrap">
+          <h2>Data Rekening Peserta</h2>
           <div class="grid-2">
-            <label>Tanggal Mulai<input id="financeStart" type="date"></label>
-            <label>Tanggal Selesai<input id="financeEnd" type="date"></label>
+            <label>Filter Bank<select id="financeBankFilter"><option value="">Semua Bank</option></select></label>
+            <label>Cari Nama<input id="financeSearch" placeholder="Cari peserta"></label>
           </div>
-          <label>Nominal per hari<input id="financeAmount" type="number" value="35000"></label>
-          <button id="financeCalculate" class="btn primary">Hitung Hari Efektif</button>
+          <table>
+            <thead><tr><th>Nama</th><th>Bank</th><th>Nomor Rekening</th><th>Kelas</th></tr></thead>
+            <tbody id="financeTableBody"></tbody>
+          </table>
         </div>
-        <div class="panel table-wrap"><table><thead><tr><th>Peserta</th><th>Kelas</th><th>Estimasi Uang Saku</th></tr></thead><tbody id="financeTableBody"></tbody></table></div>
       </section>
 
     </main>
